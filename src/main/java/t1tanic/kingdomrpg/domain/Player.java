@@ -21,24 +21,14 @@ public class Player {
     @Column(unique = true)
     private String name;
 
-    // ── Identity ──
-    private String race;
-    private String characterClass;
-    private String gender;
-    private String background;
+    @Embedded
+    private CharacterIdentity identity = new CharacterIdentity();
 
-    // ── Base attributes (D&D default: 10 = no modifier) ──
-    private int strength     = 10;
-    private int dexterity    = 10;
-    private int constitution = 10;
-    private int intelligence = 10;
-    private int wisdom       = 10;
-    private int charisma     = 10;
+    @Embedded
+    private CharacterAttributes attributes = new CharacterAttributes();
 
-    // ── Current resource values (persisted) ──
-    private int health;
-    private int mana;
-    private int stamina;
+    @Embedded
+    private CharacterResources resources = new CharacterResources();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_room_id")
@@ -54,13 +44,19 @@ public class Player {
     @ToString.Exclude
     private Set<Cantrip> learnedCantrips = new HashSet<>();
 
-    // ── D&D modifier: floor((attr - 10) / 2) ──
-    public int modifier(int attribute) {
-        return (int) Math.floor((attribute - 10) / 2.0);
+    // ── Derived maximums ──
+    public int getMaxHealth() {
+        return 50 + CharacterAttributes.modifier(attributes.getConstitution()) * 10;
     }
 
-    // ── Derived maximums ──
-    public int getMaxHealth()  { return 50 + modifier(constitution) * 10; }
-    public int getMaxMana()    { return 30 + (modifier(intelligence) + modifier(wisdom)) * 8; }
-    public int getMaxStamina() { return 40 + (modifier(strength) + modifier(dexterity) + modifier(constitution)) * 6; }
+    public int getMaxMana() {
+        return 30 + (CharacterAttributes.modifier(attributes.getIntelligence())
+                   + CharacterAttributes.modifier(attributes.getWisdom())) * 8;
+    }
+
+    public int getMaxStamina() {
+        return 40 + (CharacterAttributes.modifier(attributes.getStrength())
+                   + CharacterAttributes.modifier(attributes.getDexterity())
+                   + CharacterAttributes.modifier(attributes.getConstitution())) * 6;
+    }
 }

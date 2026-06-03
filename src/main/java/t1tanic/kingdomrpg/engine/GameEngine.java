@@ -71,20 +71,22 @@ public class GameEngine {
 
         Player player = new Player();
         player.setName(name);
-        player.setRace(raceStr);
-        player.setCharacterClass(classStr);
-        player.setGender(genderStr);
-        player.setBackground(backgroundStr);
         player.setCurrentRoom(startRoom);
-        player.setStrength(    base.get("strength"));
-        player.setDexterity(   base.get("dexterity"));
-        player.setConstitution(base.get("constitution"));
-        player.setIntelligence(base.get("intelligence"));
-        player.setWisdom(      base.get("wisdom"));
-        player.setCharisma(    base.get("charisma"));
-        player.setHealth( player.getMaxHealth());
-        player.setMana(   player.getMaxMana());
-        player.setStamina(player.getMaxStamina());
+        player.setIdentity(new CharacterIdentity(raceStr, classStr, genderStr, backgroundStr));
+        player.setAttributes(new CharacterAttributes(
+            base.get("strength"),
+            base.get("dexterity"),
+            base.get("constitution"),
+            base.get("intelligence"),
+            base.get("wisdom"),
+            base.get("charisma")
+        ));
+
+        CharacterResources res = player.getResources();
+        res.setHealth( player.getMaxHealth());
+        res.setMana(   player.getMaxMana());
+        res.setStamina(player.getMaxStamina());
+
         player.setLearnedCantrips(resolveCantrips(payload.get("cantrips")));
         return playerRepository.save(player);
     }
