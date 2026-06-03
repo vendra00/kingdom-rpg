@@ -1,0 +1,230 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --green: #00ff41;
+    --green-dim: #00aa2b;
+    --bg: #0d0d0d;
+    --bg-panel: #111;
+    --yellow: #ffd700;
+    --red: #ff4444;
+    --gray: #555;
+}
+
+body {
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ── Header ── */
+#header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--green-dim);
+    letter-spacing: 2px;
+}
+
+#title {
+    font-size: 1.1rem;
+    text-shadow: 0 0 8px var(--green);
+}
+
+#header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#player-info {
+    font-size: 0.8rem;
+    color: var(--green-dim);
+}
+
+#narrator-btn {
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    color: var(--green-dim);
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+}
+
+#narrator-btn:hover  { border-color: var(--green); color: var(--green); }
+#narrator-btn.active { border-color: var(--yellow); color: var(--yellow); }
+
+/* ── Login ── */
+#login-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#login-box {
+    border: 1px solid var(--green-dim);
+    padding: 48px 56px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0,255,65,0.08);
+}
+
+.login-title {
+    font-size: 1rem;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+}
+
+.login-hint {
+    font-size: 0.75rem;
+    color: var(--gray);
+    margin-top: 14px;
+}
+
+#player-name {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--green);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 6px 4px;
+    outline: none;
+    width: 220px;
+    text-align: center;
+    caret-color: var(--green);
+}
+
+#player-name::placeholder { color: var(--gray); }
+
+#start-btn {
+    display: block;
+    margin: 22px auto 0;
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 9px 28px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background 0.15s, color 0.15s;
+}
+
+#start-btn:hover {
+    background: var(--green);
+    color: var(--bg);
+}
+
+/* ── Game ── */
+#game-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px 0 10px;
+}
+
+#game-screen.hidden,
+#login-screen.hidden {
+    display: none;
+}
+
+#output {
+    flex: 1;
+    overflow-y: auto;
+    line-height: 1.65;
+    padding-right: 6px;
+}
+
+.line {
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 1px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.line-content { flex: 1; }
+
+.speak-btn {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 0 2px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+}
+
+.line:hover .speak-btn { opacity: 1; }
+
+.line.output  { color: var(--green); }
+.line.command { color: var(--gray); }
+.line.system  { color: var(--yellow); }
+.line.error   { color: var(--red); }
+.line.gap     { height: 8px; }
+
+/* ── Input ── */
+#input-row {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #222;
+    padding-top: 10px;
+    margin-top: 6px;
+}
+
+#prompt {
+    color: var(--green);
+    margin-right: 8px;
+    font-size: 1.05rem;
+    user-select: none;
+}
+
+#command-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--green);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    caret-color: var(--green);
+}
+
+#command-input::placeholder { color: var(--gray); }
+
+/* ── Markup tags ── */
+.tag-room { color: #ffffff; font-weight: bold; }
+.tag-exit { color: #00cfff; }
+.tag-item { color: #ffd700; font-weight: bold; }
+
+/* ── Scrollbar ── */
+#output::-webkit-scrollbar       { width: 4px; }
+#output::-webkit-scrollbar-track { background: var(--bg); }
+#output::-webkit-scrollbar-thumb { background: var(--green-dim); border-radius: 2px; }
