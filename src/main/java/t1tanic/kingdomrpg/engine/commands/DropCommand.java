@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Item;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.repository.ItemRepository;
+import t1tanic.kingdomrpg.repository.PlayerRepository;
 
 import java.util.List;
 
@@ -12,7 +13,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DropCommand implements Command {
 
-    private final ItemRepository itemRepository;
+    private final ItemRepository   itemRepository;
+    private final PlayerRepository playerRepository;
 
     @Override
     public String execute(Player player, String[] args) {
@@ -24,12 +26,20 @@ public class DropCommand implements Command {
         return inventory.stream()
             .filter(item -> item.getName().toLowerCase().contains(itemName))
             .findFirst()
-            .map(item -> {
-                item.setPlayer(null);
-                item.setRoom(player.getCurrentRoom());
-                itemRepository.save(item);
-                return "You drop the " + item.getName() + ".";
-            })
+            .map(item -> drop(player, item))
             .orElse("You don't have a " + itemName + ".");
+    }
+
+    private String drop(Player player, Item item) {
+        item.setPlayer(null);
+        item.setRoom(player.getCurrentRoom());
+        itemRepository.save(item);
+
+        int newCarry = Math.max(0, player.getResources().getCarryWeight() - item.getWeightGrams());
+        player.getResources().setCarryWeight(newCarry);
+        playerRepository.save(player);
+
+        return "You drop the %s (%.2f kg).".formatted(
+            item.getName(), item.getWeightGrams() / 1000.0);
     }
 }

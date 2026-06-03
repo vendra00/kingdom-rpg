@@ -58,4 +58,9 @@ public class Player {
     public int getMaxStamina() {
         return 40 + (attributes.modifier(STRENGTH) + attributes.modifier(DEXTERITY) + attributes.modifier(CONSTITUTION)) * 6;
     }
+
+    /** Returns maximum carry capacity in grams. */
+    public int getMaxCarryWeight() {
+        return 20_000 + attributes.modifier(STRENGTH) * 4_000 + attributes.modifier(CONSTITUTION) * 2_000;
+    }
 }

@@ -12,4 +12,5 @@ public class CharacterResources {
     private int health;
     private int mana;
     private int stamina;
+    private int carryWeight;
 }

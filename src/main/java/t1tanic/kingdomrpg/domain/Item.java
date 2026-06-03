@@ -15,6 +15,7 @@ public class Item {
 
     private String name;
     private String description;
+    private int weightGrams;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "room_id")

@@ -22,7 +22,8 @@ public class InventoryCommand implements Command {
             return "Your inventory is empty.";
         }
         return "Inventory:\n" + items.stream()
-            .map(item -> "  - " + item.getName() + ": " + item.getDescription())
+            .map(item -> "  - [item]%s[/item] (%.2f kg): %s".formatted(
+                item.getName(), item.getWeightGrams() / 1000.0, item.getDescription()))
             .collect(Collectors.joining("\n"));
     }
 }

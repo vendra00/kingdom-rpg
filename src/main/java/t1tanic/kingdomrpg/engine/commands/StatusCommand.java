@@ -39,6 +39,7 @@ public class StatusCommand implements Command {
             HP       %3d / %-3d  %s
             Mana     %3d / %-3d  %s
             Stamina  %3d / %-3d  %s
+            Carry    %.2f / %.2f kg  %s
 
             ── Attributes ────────────────────
             %s""".formatted(
@@ -46,6 +47,9 @@ public class StatusCommand implements Command {
             res.getHealth(),  player.getMaxHealth(),  bar(res.getHealth(),  player.getMaxHealth()),
             res.getMana(),    player.getMaxMana(),    bar(res.getMana(),    player.getMaxMana()),
             res.getStamina(), player.getMaxStamina(), bar(res.getStamina(), player.getMaxStamina()),
+            res.getCarryWeight()       / 1000.0,
+            player.getMaxCarryWeight() / 1000.0,
+            bar(res.getCarryWeight(),  player.getMaxCarryWeight()),
             attrSection
         );
     }
