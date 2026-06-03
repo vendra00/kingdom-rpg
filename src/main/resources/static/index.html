@@ -12,43 +12,245 @@
     <header id="header">
         <span id="title">&#9876; KINGDOM RPG</span>
         <div id="header-right">
-            <button id="narrator-btn" class="hidden" title="Toggle narrator">&#128266; Narrator</button>
-            <span id="player-info"></span>
+            <button v-if="screen === 'game'" id="narrator-btn"
+                    :class="{ active: narratorEnabled }"
+                    @click="toggleNarrator"
+                    title="Toggle narrator">&#128266; Narrator</button>
+            <span id="player-info" v-if="screen === 'game'">{{ playerName }}</span>
         </div>
     </header>
 
-    <div id="login-screen">
+    <!-- ── Login ───────────────────────────────────────────── -->
+    <div id="login-screen" v-if="screen === 'login'">
         <div id="login-box">
             <p class="login-title">Enter your name, traveller</p>
-            <input type="text" id="player-name" placeholder="Your name..." maxlength="20" autocomplete="off">
-            <button id="start-btn">Begin Adventure</button>
+            <input type="text" id="player-name" placeholder="Your name..."
+                   maxlength="20" autocomplete="off"
+                   v-model="playerName"
+                   @keydown.enter="goToWizard">
+            <button id="start-btn" @click="goToWizard">Begin Adventure</button>
             <p class="login-hint">Press Enter or click the button</p>
         </div>
     </div>
 
-    <div id="char-screen" class="hidden">
+    <!-- ── Character Creation Wizard ───────────────────────── -->
+    <div id="char-screen" v-else-if="screen === 'wizard'">
         <div id="char-wizard">
+
             <div id="wizard-header">
-                <p id="wizard-player-name"></p>
-                <div id="step-indicator"></div>
+                <p id="wizard-player-name">{{ playerName }}</p>
+                <div id="step-indicator">
+                    <template v-for="(step, i) in STEPS" :key="step">
+                        <span class="step-sep" v-if="i > 0">›</span>
+                        <span class="step-label"
+                              :class="i < wizardStep ? 'done' : i === wizardStep ? 'current' : 'future'">
+                            {{ step.toUpperCase() }}
+                        </span>
+                    </template>
+                </div>
             </div>
-            <div id="step-content"></div>
+
+            <div id="step-content">
+
+                <p v-if="flashMsg" style="color:var(--red);font-size:0.8rem;margin-bottom:12px;">{{ flashMsg }}</p>
+
+                <!-- Race -->
+                <div v-if="currentStep === 'race'">
+                    <p class="step-title">CHOOSE YOUR RACE</p>
+                    <p class="step-subtitle">Your heritage shapes your natural aptitudes.</p>
+                    <div class="card-grid">
+                        <div v-for="r in RACES" :key="r.id"
+                             class="card" :class="{ selected: char.race === r.id }"
+                             @click="char.race = r.id">
+                            <div class="card-name">{{ r.name }}</div>
+                            <div class="card-desc">{{ r.desc }}</div>
+                            <div class="card-trait">{{ r.trait }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class -->
+                <div v-else-if="currentStep === 'class'">
+                    <p class="step-title">CHOOSE YOUR CLASS</p>
+                    <p class="step-subtitle">Your class defines your fighting style and abilities.</p>
+                    <div class="card-grid">
+                        <div v-for="c in CLASSES" :key="c.id"
+                             class="card" :class="{ selected: char.characterClass === c.id }"
+                             @click="selectClass(c)">
+                            <div class="card-name">{{ c.name }}</div>
+                            <div class="card-desc">{{ c.desc }}</div>
+                            <div class="card-trait">{{ c.trait }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gender -->
+                <div v-else-if="currentStep === 'gender'">
+                    <p class="step-title">CHOOSE YOUR GENDER</p>
+                    <p class="step-subtitle">This affects how the world addresses you.</p>
+                    <div class="gender-grid">
+                        <button v-for="g in GENDERS" :key="g.id"
+                                class="gender-btn" :class="{ selected: char.gender === g.id }"
+                                @click="char.gender = g.id">
+                            {{ g.name }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Background -->
+                <div v-else-if="currentStep === 'background'">
+                    <p class="step-title">CHOOSE YOUR BACKGROUND</p>
+                    <p class="step-subtitle">Your past defines a hidden strength.</p>
+                    <div class="card-grid">
+                        <div v-for="b in BACKGROUNDS" :key="b.id"
+                             class="card" :class="{ selected: char.background === b.id }"
+                             @click="char.background = b.id">
+                            <div class="card-name">{{ b.name }}</div>
+                            <div class="card-desc">{{ b.desc }}</div>
+                            <div class="card-trait">{{ b.trait }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attributes -->
+                <div v-else-if="currentStep === 'attributes'">
+                    <p class="step-title">DISTRIBUTE ATTRIBUTES</p>
+                    <p class="step-subtitle">Spend {{ TOTAL_POINTS }} points using the D&amp;D point-buy system.</p>
+                    <div class="points-bar">
+                        Points remaining:
+                        <span :class="{ warn: pointsLeft === 0 }">{{ pointsLeft }}</span>
+                        / {{ TOTAL_POINTS }}
+                    </div>
+                    <table class="attr-table">
+                        <tr v-for="a in ATTR_DEFS" :key="a.key">
+                            <td class="attr-label">{{ a.label }}</td>
+                            <td>
+                                <button class="attr-btn"
+                                        @click="decrementAttr(a.key)"
+                                        :disabled="char.attrs[a.key] <= ATTR_MIN">&#8722;</button>
+                            </td>
+                            <td class="attr-val">{{ char.attrs[a.key] }}</td>
+                            <td>
+                                <button class="attr-btn"
+                                        @click="incrementAttr(a.key)"
+                                        :disabled="!canAfford(a.key)">+</button>
+                            </td>
+                            <td class="attr-bonus">
+                                <span v-if="totalBonus(a.key) > 0" style="color:var(--yellow)">
+                                    +{{ totalBonus(a.key) }}
+                                </span>
+                            </td>
+                            <td class="attr-final">= {{ finalAttr(a.key) }}</td>
+                            <td class="attr-mod-cell" :class="modClass(a.key)">
+                                {{ fmtMod(finalAttr(a.key)) }}
+                            </td>
+                            <td class="attr-desc-cell">{{ a.desc }}</td>
+                        </tr>
+                    </table>
+                    <div class="derived-bar">
+                        <span>HP <b>{{ previewHP }}</b></span>
+                        <span>Mana <b>{{ previewMana }}</b></span>
+                        <span>Stamina <b>{{ previewStamina }}</b></span>
+                    </div>
+                </div>
+
+                <!-- Cantrips -->
+                <div v-else-if="currentStep === 'cantrips'">
+                    <p class="step-title">CHOOSE CANTRIPS</p>
+                    <p class="step-subtitle">Innate magical abilities you can use at will.</p>
+                    <div class="cantrip-slots-bar">
+                        <span v-if="cantripSlots === 0" style="color:var(--gray);">
+                            Your class has no cantrip slots.
+                        </span>
+                        <span v-else>
+                            Selected: {{ char.cantrips.length }} / {{ cantripSlots }}
+                        </span>
+                    </div>
+                    <div class="cantrip-grid" v-if="cantripSlots > 0">
+                        <div v-for="c in availableCantrips" :key="c.id"
+                             class="cantrip-card"
+                             :class="{ selected: char.cantrips.includes(c.id) }"
+                             @click="toggleCantrip(c)">
+                            <div class="cantrip-name">{{ c.name }}</div>
+                            <div class="cantrip-school">{{ c.school }}</div>
+                            <div class="cantrip-desc">{{ c.desc }}</div>
+                            <div class="cantrip-effect" :style="{ color: cantripColor(c.effect) }">
+                                {{ c.effect.toUpperCase() }}<span v-if="c.dmg"> · {{ c.dmg }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div v-else-if="currentStep === 'summary'">
+                    <p class="step-title">CHARACTER SUMMARY</p>
+                    <p class="step-subtitle">Review your choices before entering the Kingdom.</p>
+                    <div class="summary-box">
+                        <div>
+                            <div class="summary-identity">
+                                {{ cap(summaryRace?.name) }} {{ cap(summaryClass?.name) }}
+                                &middot; {{ cap(summaryGender?.name) }}
+                            </div>
+                            <div class="summary-sub">
+                                {{ cap(summaryBg?.name) }} background &middot; {{ playerName }}
+                            </div>
+                        </div>
+                        <div class="summary-attrs">
+                            <div v-for="a in ATTR_DEFS" :key="a.key" class="summary-attr">
+                                <span>{{ a.label.slice(0, 3) }}</span>
+                                <b> {{ finalAttr(a.key) }}</b>
+                                ({{ fmtMod(finalAttr(a.key)) }})
+                            </div>
+                        </div>
+                        <div class="summary-derived">
+                            <span>HP <b>{{ previewHP }}</b></span>
+                            <span>Mana <b>{{ previewMana }}</b></span>
+                            <span>Stamina <b>{{ previewStamina }}</b></span>
+                        </div>
+                        <div class="summary-cantrips" v-if="selectedCantrips.length > 0">
+                            <span>Cantrips: </span>
+                            <span v-for="(c, i) in selectedCantrips" :key="c.id">
+                                <span class="summary-cantrip-name">{{ c.name }}</span><span
+                                    v-if="i < selectedCantrips.length - 1">, </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /#step-content -->
+
             <div id="wizard-nav">
-                <button id="btn-back">← Back</button>
-                <button id="btn-next">Next →</button>
+                <button id="btn-back" @click="prevStep" :disabled="wizardStep === 0">&#8592; Back</button>
+                <button id="btn-next" @click="nextStep" :class="{ confirm: isLastStep }">{{ nextBtnText }}</button>
             </div>
+
         </div>
     </div>
 
-    <div id="game-screen" class="hidden">
-        <div id="output"></div>
+    <!-- ── Game ─────────────────────────────────────────────── -->
+    <div id="game-screen" v-else-if="screen === 'game'">
+        <div id="output" ref="outputEl">
+            <div v-for="(msg, i) in messages" :key="i"
+                 class="line" :class="msg.type">
+                <span class="line-content" v-html="parseMarkup(msg.text)"></span>
+                <button v-if="msg.speakable" class="speak-btn"
+                        @click="speak(msg.text)" title="Read aloud">&#128266;</button>
+            </div>
+        </div>
         <div id="input-row">
             <span id="prompt">&gt;</span>
-            <input type="text" id="command-input" placeholder="Type a command..." autocomplete="off" spellcheck="false">
+            <input type="text" id="command-input" ref="commandInput"
+                   placeholder="Type a command..." autocomplete="off" spellcheck="false"
+                   v-model="commandText"
+                   @keydown.enter="sendCommand"
+                   @keydown.up.prevent="historyUp"
+                   @keydown.down.prevent="historyDown">
         </div>
     </div>
 
 </div>
-<script src="/js/game.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="/js/data.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>

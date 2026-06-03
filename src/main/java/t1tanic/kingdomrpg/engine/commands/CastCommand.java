@@ -25,14 +25,7 @@ public class CastCommand implements Command {
 
     private String castFlavor(Cantrip c) {
         String spellName = MarkupTag.ROOM.wrap(c.getName());
-        String channel = switch (c.getEffect()) {
-            case "damage"  -> "You focus your energy and shape the arcane threads of " + spellName + "...";
-            case "debuff"  -> "Dark energy coils around your fingers as you invoke " + spellName + "...";
-            case "buff"    -> "A warm shimmer envelops your hands as you channel " + spellName + "...";
-            case "utility" -> "You weave the subtle patterns of " + spellName + "...";
-            case "healing" -> "Soft light flows through you as you call upon " + spellName + "...";
-            default        -> "You begin to cast " + spellName + "...";
-        };
+        String channel   = c.getEffect().channel(spellName);
 
         String outcome = c.getDamageType() != null
             ? "\n" + MarkupTag.NARRATE.wrap(c.getDescription())
