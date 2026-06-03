@@ -3,6 +3,7 @@ package t1tanic.kingdomrpg.engine.commands;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Cantrip;
 import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.engine.MarkupTag;
 
 import java.util.Comparator;
 import java.util.Set;
@@ -21,11 +22,12 @@ public class SpellsCommand implements Command {
         cantrips.stream()
             .sorted(Comparator.comparing(Cantrip::getSchool).thenComparing(Cantrip::getName))
             .forEach(c -> {
-                String dmg = c.getDamageType() != null ? "  [item]" + c.getDamageType() + "[/item]" : "";
-                sb.append("[room]%-20s[/room] [%s]%s\n".formatted(c.getName(), c.getSchool(), dmg));
+                String dmg = c.getDamageType() != null ? "  " + MarkupTag.ITEM.wrap(c.getDamageType()) : "";
+                sb.append(MarkupTag.ROOM.wrap("%-20s".formatted(c.getName())))
+                  .append(" [%s]%s\n".formatted(c.getSchool(), dmg));
                 sb.append("  %s\n\n".formatted(c.getDescription()));
             });
-        sb.append("Use: [exit]cast[/exit] <cantrip name>");
+        sb.append("Use: ").append(MarkupTag.EXIT.wrap("cast")).append(" <cantrip name>");
         return sb.toString();
     }
 }

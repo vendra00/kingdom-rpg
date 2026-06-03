@@ -13,9 +13,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DataInitializer {
 
-    private final RoomRepository     roomRepository;
-    private final RoomInitializer    roomInitializer;
-    private final ItemInitializer    itemInitializer;
+    private final RoomRepository roomRepository;
+    private final RoomInitializer roomInitializer;
+    private final ItemInitializer itemInitializer;
     private final CantripInitializer cantripInitializer;
 
     @EventListener(ApplicationReadyEvent.class)

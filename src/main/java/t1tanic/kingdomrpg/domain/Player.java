@@ -9,6 +9,8 @@ import lombok.ToString;
 import java.util.HashSet;
 import java.util.Set;
 
+import static t1tanic.kingdomrpg.domain.Attribute.*;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -46,17 +48,14 @@ public class Player {
 
     // ── Derived maximums ──
     public int getMaxHealth() {
-        return 50 + CharacterAttributes.modifier(attributes.getConstitution()) * 10;
+        return 50 + attributes.modifier(CONSTITUTION) * 10;
     }
 
     public int getMaxMana() {
-        return 30 + (CharacterAttributes.modifier(attributes.getIntelligence())
-                   + CharacterAttributes.modifier(attributes.getWisdom())) * 8;
+        return 30 + (attributes.modifier(INTELLIGENCE) + attributes.modifier(WISDOM)) * 8;
     }
 
     public int getMaxStamina() {
-        return 40 + (CharacterAttributes.modifier(attributes.getStrength())
-                   + CharacterAttributes.modifier(attributes.getDexterity())
-                   + CharacterAttributes.modifier(attributes.getConstitution())) * 6;
+        return 40 + (attributes.modifier(STRENGTH) + attributes.modifier(DEXTERITY) + attributes.modifier(CONSTITUTION)) * 6;
     }
 }

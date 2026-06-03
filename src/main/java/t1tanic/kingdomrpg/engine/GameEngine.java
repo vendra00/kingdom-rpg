@@ -8,11 +8,13 @@ import t1tanic.kingdomrpg.repository.CantripRepository;
 import t1tanic.kingdomrpg.repository.PlayerRepository;
 import t1tanic.kingdomrpg.repository.RoomRepository;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static t1tanic.kingdomrpg.domain.Attribute.*;
 
 @Service
 @RequiredArgsConstructor
@@ -54,16 +56,13 @@ public class GameEngine {
         CharacterBackground bg   = CharacterBackground.fromString(backgroundStr);
 
         // Start from point-buy values sent by the client
-        Map<String, Integer> base = new HashMap<>();
+        Map<Attribute, Integer> base = new EnumMap<>(Attribute.class);
         if (payload.get("attributes") instanceof Map<?, ?> raw) {
-            raw.forEach((k, v) -> base.put((String) k, ((Number) v).intValue()));
+            raw.forEach((k, v) -> base.put(Attribute.fromKey((String) k), ((Number) v).intValue()));
         }
-        base.putIfAbsent("strength",     10);
-        base.putIfAbsent("dexterity",    10);
-        base.putIfAbsent("constitution", 10);
-        base.putIfAbsent("intelligence", 10);
-        base.putIfAbsent("wisdom",       10);
-        base.putIfAbsent("charisma",     10);
+        for (Attribute attr : Attribute.values()) {
+            base.putIfAbsent(attr, 10);
+        }
 
         // Apply racial + background bonuses
         race.getBonuses().forEach((k, v) -> base.merge(k, v, Integer::sum));
@@ -74,12 +73,12 @@ public class GameEngine {
         player.setCurrentRoom(startRoom);
         player.setIdentity(new CharacterIdentity(raceStr, classStr, genderStr, backgroundStr));
         player.setAttributes(new CharacterAttributes(
-            base.get("strength"),
-            base.get("dexterity"),
-            base.get("constitution"),
-            base.get("intelligence"),
-            base.get("wisdom"),
-            base.get("charisma")
+            base.get(STRENGTH),
+            base.get(DEXTERITY),
+            base.get(CONSTITUTION),
+            base.get(INTELLIGENCE),
+            base.get(WISDOM),
+            base.get(CHARISMA)
         ));
 
         CharacterResources res = player.getResources();

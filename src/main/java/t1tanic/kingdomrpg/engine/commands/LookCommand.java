@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Item;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.domain.Room;
+import t1tanic.kingdomrpg.engine.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
 import java.util.ArrayList;
@@ -21,21 +22,21 @@ public class LookCommand implements Command {
     public String execute(Player player, String[] args) {
         Room room = player.getCurrentRoom();
         StringBuilder sb = new StringBuilder();
-        sb.append("=== [room]").append(room.getName()).append("[/room] ===\n");
-        sb.append("[narrate]").append(room.getDescription()).append("[/narrate]").append("\n\n");
+        sb.append("=== ").append(MarkupTag.ROOM.wrap(room.getName())).append(" ===\n");
+        sb.append(MarkupTag.NARRATE.wrap(room.getDescription())).append("\n\n");
 
         List<String> exits = new ArrayList<>();
-        if (room.getNorthId() != null) exits.add("[exit]north[/exit]");
-        if (room.getSouthId() != null) exits.add("[exit]south[/exit]");
-        if (room.getEastId() != null) exits.add("[exit]east[/exit]");
-        if (room.getWestId() != null) exits.add("[exit]west[/exit]");
+        if (room.getNorthId() != null) exits.add(MarkupTag.EXIT.wrap("north"));
+        if (room.getSouthId() != null) exits.add(MarkupTag.EXIT.wrap("south"));
+        if (room.getEastId()  != null) exits.add(MarkupTag.EXIT.wrap("east"));
+        if (room.getWestId()  != null) exits.add(MarkupTag.EXIT.wrap("west"));
         sb.append("Exits: ").append(exits.isEmpty() ? "none" : String.join(", ", exits)).append("\n");
 
         List<Item> items = itemRepository.findByRoomId(room.getId());
         if (!items.isEmpty()) {
             sb.append("Items (use 'take <name>'): ").append(
                 items.stream()
-                    .map(item -> "[item]" + item.getName() + "[/item]")
+                    .map(item -> MarkupTag.ITEM.wrap(item.getName()))
                     .collect(Collectors.joining(", "))
             );
         }

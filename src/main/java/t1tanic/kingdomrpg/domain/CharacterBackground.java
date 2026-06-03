@@ -2,17 +2,22 @@ package t1tanic.kingdomrpg.domain;
 
 import java.util.Map;
 
-public enum CharacterBackground {
-    NOBLE    (Map.of("charisma",    1)),
-    SOLDIER  (Map.of("strength",    1)),
-    SCHOLAR  (Map.of("intelligence",1)),
-    OUTLANDER(Map.of("constitution",1)),
-    CRIMINAL (Map.of("dexterity",   1)),
-    ACOLYTE  (Map.of("wisdom",      1));
+import static t1tanic.kingdomrpg.domain.Attribute.*;
 
-    private final Map<String, Integer> bonuses;
-    CharacterBackground(Map<String, Integer> b) { this.bonuses = b; }
-    public Map<String, Integer> getBonuses() { return bonuses; }
+public enum CharacterBackground {
+
+    NOBLE    (Map.of(CHARISMA,    1)),
+    SOLDIER  (Map.of(STRENGTH,    1)),
+    SCHOLAR  (Map.of(INTELLIGENCE, 1)),
+    OUTLANDER(Map.of(CONSTITUTION, 1)),
+    CRIMINAL (Map.of(DEXTERITY,   1)),
+    ACOLYTE  (Map.of(WISDOM,      1));
+
+    private final Map<Attribute, Integer> bonuses;
+
+    CharacterBackground(Map<Attribute, Integer> b) { this.bonuses = b; }
+
+    public Map<Attribute, Integer> getBonuses() { return bonuses; }
 
     public static CharacterBackground fromString(String s) {
         if (s == null) return NOBLE;
