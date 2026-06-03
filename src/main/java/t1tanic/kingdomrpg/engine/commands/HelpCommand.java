@@ -16,6 +16,8 @@ public class HelpCommand implements Command {
               drop [item]       - Drop an item from your inventory
               inventory / inv   - Check your inventory
               status            - View your character stats
+              spells            - List your cantrips
+              cast [cantrip]    - Cast a cantrip
               help              - Show this message""";
     }
 }

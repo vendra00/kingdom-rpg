@@ -17,6 +17,8 @@ public class CommandParser {
     private final DropCommand dropCommand;
     private final InventoryCommand inventoryCommand;
     private final StatusCommand statusCommand;
+    private final SpellsCommand spellsCommand;
+    private final CastCommand castCommand;
     private final HelpCommand helpCommand;
 
     public String parse(Player player, String input) {
@@ -39,6 +41,8 @@ public class CommandParser {
             case "drop"                              -> dropCommand.execute(player, args);
             case "inventory", "inv", "i"             -> inventoryCommand.execute(player, args);
             case "status", "stats"                   -> statusCommand.execute(player, args);
+            case "spells", "cantrips", "grimoire"    -> spellsCommand.execute(player, args);
+            case "cast", "use"                       -> castCommand.execute(player, args);
             case "help", "?"                         -> helpCommand.execute(player, args);
             default -> "I don't understand '" + verb + "'. Type 'help' for commands.";
         };

@@ -21,9 +21,10 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         try {
-            Map<?, ?> payload = objectMapper.readValue(message.getPayload(), Map.class);
+            Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
             String type = (String) payload.get("type");
 
             if ("join".equals(type)) {
@@ -33,7 +34,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     return;
                 }
                 sessionToPlayer.put(session.getId(), name);
-                send(session, "system", "Welcome, " + name + "!  Type 'help' for commands.\n");
+                String welcome = gameEngine.joinGame(name, payload);
+                send(session, "system", welcome);
                 send(session, "output", gameEngine.processCommand(name, "look"));
 
             } else if ("command".equals(type)) {
@@ -42,8 +44,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
                     send(session, "error", "Session expired — please refresh.");
                     return;
                 }
-                String result = gameEngine.processCommand(name, (String) payload.get("text"));
-                send(session, "output", result);
+                send(session, "output", gameEngine.processCommand(name, (String) payload.get("text")));
             }
         } catch (Exception e) {
             send(session, "error", "Something went wrong: " + e.getMessage());
