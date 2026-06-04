@@ -13,12 +13,9 @@ import static t1tanic.kingdomrpg.domain.Attribute.*;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class Player {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Player extends BaseEntity {
 
     @Column(unique = true)
     private String name;
@@ -46,7 +43,6 @@ public class Player {
     @ToString.Exclude
     private Set<Cantrip> learnedCantrips = new HashSet<>();
 
-    // ── Derived maximums ──
     public int getMaxHealth() {
         return 50 + attributes.modifier(CONSTITUTION) * 10;
     }
@@ -59,7 +55,6 @@ public class Player {
         return 40 + (attributes.modifier(STRENGTH) + attributes.modifier(DEXTERITY) + attributes.modifier(CONSTITUTION)) * 6;
     }
 
-    /** Returns maximum carry capacity in grams. */
     public int getMaxCarryWeight() {
         return 20_000 + attributes.modifier(STRENGTH) * 4_000 + attributes.modifier(CONSTITUTION) * 2_000;
     }

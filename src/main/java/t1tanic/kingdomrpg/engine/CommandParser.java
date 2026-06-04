@@ -1,5 +1,6 @@
 package t1tanic.kingdomrpg.engine;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Player;
@@ -11,15 +12,16 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class CommandParser {
 
-    private final LookCommand lookCommand;
-    private final GoCommand goCommand;
-    private final TakeCommand takeCommand;
-    private final DropCommand dropCommand;
+    private final LookCommand      lookCommand;
+    private final GoCommand        goCommand;
+    private final TakeCommand      takeCommand;
+    private final DropCommand      dropCommand;
     private final InventoryCommand inventoryCommand;
-    private final StatusCommand statusCommand;
-    private final SpellsCommand spellsCommand;
-    private final CastCommand castCommand;
-    private final HelpCommand helpCommand;
+    private final StatusCommand    statusCommand;
+    private final SpellsCommand    spellsCommand;
+    private final CastCommand      castCommand;
+    private final HelpCommand      helpCommand;
+    private final MeterRegistry    meterRegistry;
 
     public String parse(Player player, String input) {
         if (input == null || input.isBlank()) {
@@ -27,9 +29,14 @@ public class CommandParser {
         }
 
         String[] parts = input.trim().toLowerCase().split("\\s+");
-        String verb = parts[0];
-        String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+        String   verb  = parts[0];
+        String[] args  = Arrays.copyOfRange(parts, 1, parts.length);
 
+        return meterRegistry.timer("game.command.duration", "verb", verb)
+                            .record(() -> dispatch(player, verb, args));
+    }
+
+    private String dispatch(Player player, String verb, String[] args) {
         return switch (verb) {
             case "look", "l"                         -> lookCommand.execute(player, args);
             case "go", "move"                        -> goCommand.execute(player, args);
