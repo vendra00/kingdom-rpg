@@ -142,7 +142,8 @@ createApp({
             try {
                 const r  = await fetch('/api/players');
                 this.saves = await r.json();
-            } catch (_) {
+            } catch (e) {
+                console.warn('Failed to load saves:', e);
                 this.saves = [];
             }
             this.savesLoaded = true;
@@ -227,7 +228,9 @@ createApp({
         },
         modClass(key) {
             const m = this.modifier(this.finalAttr(key));
-            return m > 0 ? 'pos' : m < 0 ? 'neg' : '';
+            if (m > 0) return 'pos';
+            if (m < 0) return 'neg';
+            return '';
         },
 
         incrementAttr(key) { if (this.canAfford(key))             { this.char.attrs[key]++; Sounds.attrUp();   } },
@@ -362,35 +365,44 @@ createApp({
 
         handleKey(e) {
             if (this.ac.items.length) {
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    this.ac.idx = (this.ac.idx + 1) % this.ac.items.length;
-                    this.$nextTick(() => this.scrollAcActive());
-                    return;
-                }
-                if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    this.ac.idx = this.ac.idx <= 0
-                        ? this.ac.items.length - 1 : this.ac.idx - 1;
-                    this.$nextTick(() => this.scrollAcActive());
-                    return;
-                }
-                if (e.key === 'Tab') {
-                    e.preventDefault();
-                    this.acceptAc(this.ac.items[Math.max(0, this.ac.idx)]);
-                    return;
-                }
-                if (e.key === 'Escape') { e.preventDefault(); this.closeAc(); return; }
-                if (e.key === 'Enter' && this.ac.idx >= 0) {
-                    e.preventDefault();
-                    this.acceptAc(this.ac.items[this.ac.idx]);
-                    return;
-                }
+                if (this.handleAcKey(e)) return;
             } else {
-                if (e.key === 'ArrowUp')   { e.preventDefault(); this.historyUp();   return; }
-                if (e.key === 'ArrowDown') { e.preventDefault(); this.historyDown(); return; }
+                if (this.handleHistoryKey(e)) return;
             }
             if (e.key === 'Enter') this.sendCommand();
+        },
+
+        handleAcKey(e) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.ac.idx = (this.ac.idx + 1) % this.ac.items.length;
+                this.$nextTick(() => this.scrollAcActive());
+                return true;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.ac.idx = this.ac.idx <= 0 ? this.ac.items.length - 1 : this.ac.idx - 1;
+                this.$nextTick(() => this.scrollAcActive());
+                return true;
+            }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                this.acceptAc(this.ac.items[Math.max(0, this.ac.idx)]);
+                return true;
+            }
+            if (e.key === 'Escape') { e.preventDefault(); this.closeAc(); return true; }
+            if (e.key === 'Enter' && this.ac.idx >= 0) {
+                e.preventDefault();
+                this.acceptAc(this.ac.items[this.ac.idx]);
+                return true;
+            }
+            return false;
+        },
+
+        handleHistoryKey(e) {
+            if (e.key === 'ArrowUp')   { e.preventDefault(); this.historyUp();   return true; }
+            if (e.key === 'ArrowDown') { e.preventDefault(); this.historyDown(); return true; }
+            return false;
         },
 
         scrollAcActive() {
@@ -432,7 +444,7 @@ createApp({
             if (!text) return;
             this.cmdHistory.unshift(text);
             this.addMessage('> ' + text, 'command');
-            if (!this.ws || this.ws.readyState !== WebSocket.OPEN) { this.addMessage('Not connected.', 'error'); return; }
+            if (this.ws?.readyState !== WebSocket.OPEN) { this.addMessage('Not connected.', 'error'); return; }
             this.ws.send(JSON.stringify({ type: 'command', text }));
         },
 
@@ -458,7 +470,7 @@ createApp({
             }
 
             // Extract [stats] block and update sidebar
-            const statsM = text.match(/\[stats\]([^\[]+)\[\/stats\]/);
+            const statsM = text.match(/\[stats]([^[]+)\[\/stats]/);
             if (statsM) {
                 const [hp, maxHp, mana, maxMana, stamina, maxStamina, carry, maxCarry] =
                     statsM[1].split(',').map(Number);
@@ -471,8 +483,8 @@ createApp({
 
             // Strip nerd and stats blocks from the main output text
             const mainText = text
-                .replace(/\n?\[nerd\][\s\S]*?\[\/nerd\]\n?/g, '\n')
-                .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
+                .replaceAll(/\n?\[nerd][\s\S]*?\[\/nerd]\n?/g, '\n')
+                .replaceAll(/\[stats][^[]*\[\/stats]/g, '')
                 .replace(/^\n+/, '')
                 .trimEnd();
 
@@ -496,10 +508,10 @@ createApp({
         },
 
         parseMarkup(text) {
-            const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const esc = text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
             return esc
-                .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g,      '')
-                .replace(/\[stats\][^\[]*\[\/stats\]/g,       '')
+                .replaceAll(/\[nerd][\s\S]*?\[\/nerd]/g,      '')
+                .replaceAll(/\[stats][^[]*\[\/stats]/g,       '')
                 .replace(/\[narrate\](.*?)\[\/narrate\]/g,    '$1')
                 .replace(/\[room\](.*?)\[\/room\]/g,          '<span class="tag-room">$1</span>')
                 .replace(/\[exit\](.*?)\[\/exit\]/g,          '<span class="tag-exit">$1</span>')
@@ -516,7 +528,7 @@ createApp({
 
         handleOutputClick(e) {
             const link = e.target.closest('.cmd-link');
-            if (!link || !link.dataset.cmd) return;
+            if (!link?.dataset.cmd) return;
 
             const cmd      = link.dataset.cmd;                      // e.g. "take short sword"
             const itemName = cmd.split(' ').slice(1).join(' ');     // "short sword"
@@ -538,26 +550,26 @@ createApp({
         // ── Narrator ─────────────────────────────────────────
         toggleNarrator() {
             this.narratorEnabled = !this.narratorEnabled;
-            if (!this.narratorEnabled) window.speechSynthesis?.cancel();
+            if (!this.narratorEnabled) globalThis.speechSynthesis?.cancel();
         },
         speak(text) {
-            if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
+            if (!globalThis.speechSynthesis) return;
+            globalThis.speechSynthesis.cancel();
             const utt = new SpeechSynthesisUtterance(this.stripTags(text));
             utt.voice = this.availableVoices.find(v => v.lang === 'en-GB')
                      || this.availableVoices.find(v => v.lang.startsWith('en'))
                      || null;
             utt.rate = 0.88; utt.pitch = 0.85;
-            window.speechSynthesis.speak(utt);
+            globalThis.speechSynthesis.speak(utt);
         },
         stripTags(text) {
-            const m = text.match(/\[narrate\]([\s\S]*?)\[\/narrate\]/);
+            const m = text.match(/\[narrate]([\s\S]*?)\[\/narrate]/);
             return m ? m[1] : text
-                .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g, '')
-                .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
-                .replace(/\[c=[^\]]+\]/g, '')
-                .replace(/\[\/c\]/g, '')
-                .replace(/\[\/?(?:room|exit|item|invitem|equipped|container|narrate)\]/g, '');
+                .replaceAll(/\[nerd][\s\S]*?\[\/nerd]/g, '')
+                .replaceAll(/\[stats][^[]*\[\/stats]/g, '')
+                .replaceAll(/\[c=[^\]]+]/g, '')
+                .replaceAll(/\[\/c]/g, '')
+                .replaceAll(/\[\/?(?:room|exit|item|invitem|equipped|container|narrate)]/g, '');
         },
 
         pct(val, max) {
@@ -565,7 +577,9 @@ createApp({
         },
         hpColor(hp, max) {
             const p = max > 0 ? hp / max : 1;
-            return p > 0.5 ? '#00ff41' : p > 0.25 ? '#ffd700' : '#ff4444';
+            if (p > 0.5)  return '#00ff41';
+            if (p > 0.25) return '#ffd700';
+            return '#ff4444';
         },
 
         uiClick() { Sounds.click(); },
@@ -578,10 +592,10 @@ createApp({
     },
 
     mounted() {
-        if (window.speechSynthesis) {
-            const load = () => { this.availableVoices = window.speechSynthesis.getVoices(); };
+        if (globalThis.speechSynthesis) {
+            const load = () => { this.availableVoices = globalThis.speechSynthesis.getVoices(); };
             load();
-            window.speechSynthesis.addEventListener('voiceschanged', load);
+            globalThis.speechSynthesis.addEventListener('voiceschanged', load);
         }
         this.fetchSaves();
     },
