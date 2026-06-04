@@ -49,6 +49,9 @@ createApp({
             // ── Autocomplete ─────────────────────────────────
             ac: { items: [], idx: -1 },
 
+            // ── Music ───────────────────────────────────────
+            musicMuted: false,
+
             // ── Narrator ────────────────────────────────────
             narratorEnabled: false,
             availableVoices: [],
@@ -96,15 +99,17 @@ createApp({
 
     methods: {
         // ── Title menu ───────────────────────────────────────
-        goToNewGame() { this.screen = 'login'; },
+        goToNewGame() { this.startMusic(); this.screen = 'login'; },
 
         async goToLoad() {
+            this.startMusic();   // before await — stays inside the user-gesture context
             await this.fetchSaves();
             this.screen = 'load';
         },
 
         async goToContinue() {
             if (!this.saves.length) return;
+            this.fadeOutMusic();
             const s = this.saves[0];
             this.playerName = s.name;
             this.screen = 'game';
@@ -125,6 +130,7 @@ createApp({
         },
 
         loadSave(s) {
+            this.fadeOutMusic();
             this.playerName = s.name;
             this.screen = 'game';
             this.$nextTick(() => this.connectDirect(s.name));
@@ -213,6 +219,44 @@ createApp({
         },
         cantripColor(effect) {
             return { damage:'var(--red)', debuff:'#ff8c00', buff:'var(--green)', utility:'#00cfff', healing:'var(--yellow)' }[effect] || 'var(--gray)';
+        },
+
+        // ── Music ────────────────────────────────────────────
+        startMusic() {
+            if (this.musicMuted) return;
+            const el = document.getElementById('bg-music');
+            if (!el) return;
+            el.volume = 1;
+            el.play().catch(() => {}); // silently ignored if file is missing
+        },
+
+        fadeOutMusic(ms = 1500) {
+            const el = document.getElementById('bg-music');
+            if (!el || el.paused) return;
+            const steps     = 30;
+            const interval  = ms / steps;
+            const decrement = el.volume / steps;
+            const timer = setInterval(() => {
+                el.volume = Math.max(0, el.volume - decrement);
+                if (el.volume <= 0) {
+                    clearInterval(timer);
+                    el.pause();
+                    el.currentTime = 0;
+                    el.volume = 1;   // restore for next playback
+                }
+            }, interval);
+        },
+
+        toggleMusic() {
+            this.musicMuted = !this.musicMuted;
+            const el = document.getElementById('bg-music');
+            if (!el) return;
+            if (this.musicMuted) {
+                el.pause();
+            } else {
+                el.volume = 1;
+                el.play().catch(() => {});
+            }
         },
 
         // ── Autocomplete ─────────────────────────────────────
@@ -320,6 +364,7 @@ createApp({
 
         // ── Game ─────────────────────────────────────────────
         startGame() {
+            this.fadeOutMusic();
             this.screen = 'game';
             this.$nextTick(() => this.connect());
         },

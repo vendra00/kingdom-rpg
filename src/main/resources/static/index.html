@@ -9,9 +9,18 @@
 <body>
 <div id="app">
 
+    <audio id="bg-music" loop preload="auto">
+        <source src="/audio/theme.mp3" type="audio/mpeg">
+        <source src="/audio/theme.ogg" type="audio/ogg">
+    </audio>
+
     <header id="header">
         <span id="title">&#9876; KINGDOM RPG</span>
         <div id="header-right">
+            <button v-if="screen !== 'game'" id="music-btn"
+                    :class="{ muted: musicMuted }"
+                    @click="toggleMusic"
+                    title="Toggle music">&#9835; Music</button>
             <button v-if="screen === 'game'" id="narrator-btn"
                     :class="{ active: narratorEnabled }"
                     @click="toggleNarrator"

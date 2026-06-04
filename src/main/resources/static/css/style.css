@@ -74,6 +74,20 @@ body {
 #narrator-btn:hover  { border-color: var(--green); color: var(--green); }
 #narrator-btn.active { border-color: var(--yellow); color: var(--yellow); }
 
+#music-btn {
+    background: transparent;
+    border: 1px solid var(--green-dim);
+    color: var(--green-dim);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 3px;
+    transition: all 0.15s;
+}
+#music-btn:hover       { border-color: var(--green); color: var(--green); }
+#music-btn.muted       { border-color: var(--gray); color: var(--gray); text-decoration: line-through; }
+
 /* ── Login ── */
 #login-screen {
     flex: 1;
