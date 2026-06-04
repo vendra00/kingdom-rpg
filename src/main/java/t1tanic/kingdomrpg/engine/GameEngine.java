@@ -19,6 +19,14 @@ import java.util.Set;
 
 import static t1tanic.kingdomrpg.domain.character.Attribute.*;
 
+/**
+ * Core transactional service orchestration engine driving character initialization and command dispatch loops.
+ * <p>The {@code GameEngine} acts as the primary API bridge, routing user connections, parsing upstream configuration
+ * payloads to construct persistent character hierarchies, and dispatching inbound commands down to the domain layer.</p>
+ *
+ * @author t1tanic
+ * @version 1.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,6 +37,16 @@ public class GameEngine {
     private final RoomRepository roomRepository;
     private final CantripRepository cantripRepository;
 
+    /**
+     * Resolves an entry sequence request for a specific entity nickname.
+     * <p>If the name matching evaluation checks out clean against the underlying storage system,
+     * a fresh {@link Player} graph is automatically initialized and committed using payload properties.
+     * Otherwise, reconnecting metadata states are retrieved.</p>
+     *
+     * @param name    the unique player or account user identity handle
+     * @param payload the configuration matrix containing point-buy attributes, race selection, and spell choices
+     * @return a narrative context string indicating either initialization confirmation or a welcome fallback message
+     */
     @Transactional
     public String joinGame(String name, Map<String, Object> payload) {
         boolean isNew = playerRepository.findByName(name).isEmpty();
@@ -40,6 +58,14 @@ public class GameEngine {
         return "Welcome back, " + name + "!  Your adventure continues.\n";
     }
 
+    /**
+     * Delegates text input parsing downstream within an isolated transaction layer.
+     *
+     * @param playerName the identifier token matching an active player entity record
+     * @param input      the raw command string entered by the user
+     * @return the execution response string processed by the parsing infrastructure
+     * @throws IllegalStateException if no player matching the provided name parameter exists in storage
+     */
     @Transactional
     public String processCommand(String playerName, String input) {
         Player player = playerRepository.findByName(playerName)
@@ -47,6 +73,22 @@ public class GameEngine {
         return commandParser.parse(player, input);
     }
 
+    /**
+     * Performs a multi-stage structural initialization of a new player instance.
+     * <p>The building pipeline steps include:</p>
+     * <ol>
+     * <li>Binding the session reference to the standard starting point environment container index.</li>
+     * <li>Parsing metadata characteristics (Race, Class, Biography parameters).</li>
+     * <li>Mapping point-buy stats, safety checking baseline configurations, and adding race/background bonuses.</li>
+     * <li>Evaluating maximum capacity values to calculate starting health, stamina, and mana pools.</li>
+     * <li>Querying and associating eligible starting cantrip collections.</li>
+     * </ol>
+     *
+     * @param name    the user identifier tag name
+     * @param payload the raw parameter map configuration payload
+     * @return a managed, fully updated {@link Player} domain state reference
+     * @throws IllegalStateException if the fallback starter room configuration index cannot be resolved
+     */
     @SuppressWarnings("unchecked")
     private Player createNewPlayer(String name, Map<String, Object> payload) {
         Room startRoom = roomRepository.findById(1L)
@@ -96,6 +138,13 @@ public class GameEngine {
         return playerRepository.save(player);
     }
 
+    /**
+     * Resolves a generic list parameter containing text identifier tokens back into persistent entities.
+     * Unrecognized key lookups are dropped safely from aggregation steps.
+     *
+     * @param raw the list array object reference extracted from the payload
+     * @return a distinct, updated {@link Set} collection containing the confirmed managed {@link Cantrip} entities
+     */
     @SuppressWarnings("unchecked")
     private Set<Cantrip> resolveCantrips(Object raw) {
         Set<Cantrip> result = new HashSet<>();

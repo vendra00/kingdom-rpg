@@ -4,41 +4,94 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Immutable result of one or more dice rolls, optionally carrying a flat modifier.
- * Chain {@link #plus(int)} to attach an attribute bonus without mutating this object.
+ * An immutable record representing the result of one or more dice rolls, tracking individual rolls
+ * and carrying an optional static numeric modifier.
+ * <p>This class encapsulates the data needed to evaluate complex dice outcomes, support mechanical triggers
+ * (like critical hits or fumbles), and generate formatted narrative string readouts. It is designed
+ * to be non-mutating; adding bonuses is achieved by chaining the {@link #plus(int)} method.</p>
+ *
+ * @param dice     the standard polyhedral {@link Dice} configuration used for the roll
+ * @param rolls    the unmodifiable {@link List} of individual integer results generated from each die face cast
+ * @param modifier the flat integer bonus or penalty applied to the cumulative raw score total
+ * @author t1tanic
+ * @version 1.0
  */
 public record DiceRoll(Dice dice, List<Integer> rolls, int modifier) {
 
+    /**
+     * Compact constructor designed to enforce record immutability defenses.
+     * <p>Ensures that the internal listing of individual results is defensively shallow-copied to prevent
+     * external array mutation loops.</p>
+     */
     public DiceRoll {
         rolls = List.copyOf(rolls);
     }
 
-    /** Sum of all individual rolls, before the modifier. */
+    /**
+     * Computes the mathematical sum of all individual dice rolls before evaluating any modifier shifts.
+     *
+     * @return the raw calculated total as an integer value
+     */
     public int rawTotal() {
         return rolls.stream().mapToInt(Integer::intValue).sum();
     }
 
-    /** Final result: raw total plus the modifier. */
+    /**
+     * Computes the absolute final evaluated result of this pool action block.
+     * <p>Formula: {@code rawTotal() + modifier}</p>
+     *
+     * @return the final modified score total as an integer value
+     */
     public int total() {
         return rawTotal() + modifier;
     }
 
-    /** Return a new DiceRoll with an additional flat modifier (e.g. an ability bonus). */
+    /**
+     * Returns a new independent {@code DiceRoll} copy carrying an altered static flat modifier factor.
+     * <p>Typically utilized to seamlessly chain skill capabilities or inject specialized attribute
+     * adjustment modifiers (e.g. {@code roll.plus(attributes.modifier(Attribute.STRENGTH))}) without mutating
+     * the existing snapshot.</p>
+     *
+     * @param mod the structural integer value change to additively apply to the existing modifier score
+     * @return a fresh immutable {@code DiceRoll} instance carrying the updated compound modifier
+     */
     public DiceRoll plus(int mod) {
         return new DiceRoll(dice, rolls, modifier + mod);
     }
 
-    /** True when a single d20 shows a natural 20. */
+    /**
+     * Evaluates whether this action outcome constitutes a natural 20 critical validation trigger.
+     * <p>Conditions met only when a singular {@link Dice#D20} configuration is used and its raw generated
+     * face roll evaluates exactly to 20.</p>
+     *
+     * @return {@code true} if the result is a critical success; {@code false} otherwise
+     */
     public boolean isCritical() {
         return dice == Dice.D20 && rolls.size() == 1 && rolls.get(0) == 20;
     }
 
-    /** True when a single d20 shows a natural 1. */
+    /**
+     * Evaluates whether this action outcome constitutes a natural 1 critical failure fumble trigger.
+     * <p>Conditions met only when a singular {@link Dice#D20} configuration is used and its raw generated
+     * face roll evaluates exactly to 1.</p>
+     *
+     * @return {@code true} if the result is a critical failure; {@code false} otherwise
+     */
     public boolean isFumble() {
         return dice == Dice.D20 && rolls.size() == 1 && rolls.get(0) == 1;
     }
 
-    /** Human-readable line suitable for terminal output. */
+    /**
+     * Compiles a readable logging or terminal breakdown string formatting the math layout of the rolls.
+     * <p>Examples of generated format output variations:</p>
+     * <ul>
+     * <li>{@code "d20 → 15 + 3 = 18"}</li>
+     * <li>{@code "2d6 → [4, 5] = 9 - 1 = 8"}</li>
+     * <li>{@code "d20 → 20  — CRITICAL HIT!"}</li>
+     * </ul>
+     *
+     * @return a structured, human-readable {@link String} capturing the full dice operation breakdown
+     */
     public String format() {
         StringBuilder sb = new StringBuilder();
 
@@ -65,6 +118,11 @@ public record DiceRoll(Dice dice, List<Integer> rolls, int modifier) {
         return sb.toString();
     }
 
+    /**
+     * Overrides default string structural generation to output the specialized layout format text.
+     *
+     * @return identical to the output of {@link #format()}
+     */
     @Override
     public String toString() {
         return format();

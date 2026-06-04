@@ -12,12 +12,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Command implementation responsible for auditing and listing a player character's inventory content.
+ * <p>This command queries active item assets bound to the player ID, segments them into categories based on
+ * their structural {@link ItemTag}, calculates metric weights into fractional kilograms, and renders a
+ * marked-up terminal display sheet summarizing descriptions and gear types.</p>
+ *
+ * @author t1tanic
+ * @version 1.0
+ */
 @Component
 @RequiredArgsConstructor
 public class InventoryCommand implements Command {
 
     private final ItemRepository itemRepository;
 
+    /**
+     * {@inheritDoc}
+     * <p>Groups item entities by category and processes each cluster into structural display lines. Special
+     * item sub-labels (e.g., specific equipment types) are extracted dynamically and styled with independent markup tags.</p>
+     *
+     * @param player the active player character querying their carrying storage
+     * @param args   trailing command arguments (unused by this command block)
+     * @return a structured, marked-up string breakdown detailing item weights, descriptions, and functional types
+     */
     @Override
     public String execute(Player player, String[] args) {
         List<Item> items = itemRepository.findByPlayerId(player.getId());

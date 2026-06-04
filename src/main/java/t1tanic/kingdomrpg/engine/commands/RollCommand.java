@@ -8,12 +8,35 @@ import t1tanic.kingdomrpg.engine.dice.DiceRoll;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Command implementation responsible for parsing and executing arbitrary dice roll notations.
+ * <p>This command intercepts standalone gaming dice requests, matches them against standard regular
+ * expression formulas (supporting multi-dice structures and signed mathematical modifiers), evaluates
+ * the numeric calculations through the underlying {@link Dice} systems, and returns a formatted arithmetic breakdown.</p>
+ *
+ * @author t1tanic
+ * @version 1.0
+ */
 @Component
 public class RollCommand implements Command {
 
-    // Accepts: "d20", "2d6", "1d20+5", "d8-2"
+    /**
+     * Regular expression tracking standard polyhedral tabletop dice notation.
+     * Matches optional die quantity count parameters, required faced indices, and optional trailing math offsets
+     * (e.g., matching groups across layouts like "2d6", "d20+5", or "1d8-2").
+     */
     private static final Pattern NOTATION = Pattern.compile("(\\d*d\\d+)([+-]\\d+)?");
 
+    /**
+     * {@inheritDoc}
+     * <p>Normalizes input text segments by stripping spaces, validates alignment against regex bounds,
+     * applies signed trailing modifiers to calculations, and falls back to interactive documentation if
+     * parsing exceptions or unrecognized die sizes occur.</p>
+     *
+     * @param player the active player character initiating the dice roll request
+     * @param args   the argument segments containing the textual dice notation phrase
+     * @return a structured string breaking down individual roll values, mod values, and calculation aggregates
+     */
     @Override
     public String execute(Player player, String[] args) {
         if (args.length == 0) {

@@ -12,12 +12,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Command implementation responsible for auditing and rendering the player's immediate environmental surroundings.
+ * <p>This command queries the structural layout data of the character's current {@link Room}, parses available
+ * geographic direction pathways, checks for items dropped on the floor using the {@link ItemRepository}, and formats
+ * a cohesive, marked-up scene narrative block for the user interface console.</p>
+ *
+ * @author t1tanic
+ * @version 1.0
+ */
 @Component
 @RequiredArgsConstructor
 public class LookCommand implements Command {
 
     private final ItemRepository itemRepository;
 
+    /**
+     * {@inheritDoc}
+     * <p>Compiles localized spatial structural metadata, parsing valid directional doorway indices and appending
+     * item identifiers to construct an integrated visual field snapshot of the player's location.</p>
+     *
+     * @param player the active player character observing their surroundings
+     * @param args   trailing command arguments (unused by this command block)
+     * @return a structured, multi-line string capturing environmental titles, story descriptions, exits, and visible items
+     */
     @Override
     public String execute(Player player, String[] args) {
         Room room = player.getCurrentRoom();

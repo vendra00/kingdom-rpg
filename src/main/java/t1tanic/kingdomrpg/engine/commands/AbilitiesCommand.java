@@ -6,9 +6,27 @@ import t1tanic.kingdomrpg.domain.character.AbilityCategory;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.engine.MarkupTag;
 
+/**
+ * Command implementation responsible for displaying the player's active Ability Book.
+ * <p>This command aggregates available game skills by their respective categories,
+ * computes current situational attribute modifiers based on the player's core stats,
+ * and formats an aligned, scannable terminal overview complete with semantic text markup tags.</p>
+ *
+ * @author t1tanic
+ * @version 1.0
+ */
 @Component
 public class AbilitiesCommand implements Command {
 
+    /**
+     * {@inheritDoc}
+     * <p>Generates a multi-column visual index tracking abilities grouped under structural headers,
+     * rendering descriptions, base Difficulty Classes (DCs), and relevant operational command suggestions.</p>
+     *
+     * @param player the active player character querying their ability matrix
+     * @param args   trailing command arguments (unused by this command block)
+     * @return a structured, marked-up text menu displaying categories, skills, modifiers, and DCs
+     */
     @Override
     public String execute(Player player, String[] args) {
         var attrs = player.getAttributes();
