@@ -52,7 +52,10 @@ public class SearchCommand implements Command {
             if (player.getScannedRoomIds().contains(roomId)) {
                 return "You've already searched this room. What you found is what there is.";
             }
-            List<Item> hidden = itemRepository.findByRoomIdAndVisible(roomId, false);
+            // Container contents stay hidden until explicitly searched — only scan loose items
+            List<Item> hidden = itemRepository.findByRoomIdAndVisible(roomId, false).stream()
+                .filter(i -> i.getHiddenIn() == null || i.getHiddenIn().isBlank())
+                .toList();
             if (hidden.isEmpty()) {
                 player.getScannedRoomIds().add(roomId);
                 playerRepository.save(player);

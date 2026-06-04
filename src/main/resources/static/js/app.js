@@ -515,7 +515,17 @@ createApp({
         handleOutputClick(e) {
             const link = e.target.closest('.cmd-link');
             if (!link || !link.dataset.cmd) return;
-            this.commandText = link.dataset.cmd;
+
+            const cmd      = link.dataset.cmd;                      // e.g. "take short sword"
+            const itemName = cmd.split(' ').slice(1).join(' ');     // "short sword"
+            const current  = this.commandText.trimEnd();
+            const typedVerb = current.split(' ')[0];
+
+            // If the player already typed a verb, honour it and just fill the argument
+            this.commandText = (current && typedVerb && itemName)
+                ? typedVerb + ' ' + itemName
+                : cmd;
+
             Sounds.click();
             this.$nextTick(() => this.$refs.commandInput?.focus());
         },
