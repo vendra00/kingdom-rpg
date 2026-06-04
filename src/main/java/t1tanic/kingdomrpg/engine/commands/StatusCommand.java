@@ -9,6 +9,7 @@ import t1tanic.kingdomrpg.domain.item.enums.EquipmentSlot;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +51,7 @@ public class StatusCommand implements Command {
             "  Stamina " + MarkupTag.color("#ffd700", bar(res.getStamina(), player.getMaxStamina()))
                          + "  " + MarkupTag.color("#ffd700", res.getStamina() + " / " + player.getMaxStamina()) + "\n" +
             "  Carry   " + bar(res.getCarryWeight(), player.getMaxCarryWeight())
-                         + "  %.2f / %.2f kg".formatted(res.getCarryWeight() / 1000.0, player.getMaxCarryWeight() / 1000.0);
+                         + "  " + String.format(Locale.US, "%.2f / %.2f kg", res.getCarryWeight() / 1000.0, player.getMaxCarryWeight() / 1000.0);
 
         String attrSection = Arrays.stream(Attribute.values())
             .map(attr -> "  %-14s%2d  (%+d)".formatted(cap(attr.key()), attrs.get(attr), attrs.modifier(attr)))
@@ -68,7 +69,7 @@ public class StatusCommand implements Command {
             Item item = eq.getSlot(slot);
             String slotLabel = "  %-10s".formatted(slot.label());
             if (item != null) {
-                sb.append(slotLabel).append(MarkupTag.ITEM.wrap(item.getName())).append("\n");
+                sb.append(slotLabel).append(MarkupTag.EQUIPPED.wrap(item.getName())).append("\n");
             } else {
                 sb.append(slotLabel).append(MarkupTag.color("#555555", "— empty —")).append("\n");
             }

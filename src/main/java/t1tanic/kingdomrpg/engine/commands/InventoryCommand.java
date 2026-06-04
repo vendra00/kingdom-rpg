@@ -11,6 +11,7 @@ import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -83,7 +84,7 @@ public class InventoryCommand implements Command {
     }
 
     private String metaLine(Item item) {
-        String weight = "%.2f kg".formatted(item.getWeightGrams() / 1000.0);
+        String weight = String.format(Locale.US, "%.2f kg", item.getWeightGrams() / 1000.0);
         String base   = item.getTypeLabel() + "  ·  " + weight;
         if (item instanceof Consumable c) {
             return base + "  ·  Charges: " + c.getCharges();

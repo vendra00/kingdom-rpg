@@ -39,7 +39,12 @@ public enum MarkupTag {
      * Used for items already in the player's inventory.
      * Rendered as a clickable element prefilling "equip &lt;name&gt;" in the command input.
      */
-    INVITEM("invitem");
+    INVITEM("invitem"),
+    /**
+     * Used for items currently occupying an equipment slot.
+     * Rendered as a clickable element prefilling "unequip &lt;name&gt;" in the command input.
+     */
+    EQUIPPED("equipped");
 
     private final String tag;
 

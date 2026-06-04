@@ -507,6 +507,8 @@ createApp({
                     `<span class="tag-item cmd-link" data-cmd="take ${name.toLowerCase()}" title="take ${name.toLowerCase()}">${name}</span>`)
                 .replace(/\[invitem\](.*?)\[\/invitem\]/g,    (_, name) =>
                     `<span class="tag-item cmd-link" data-cmd="equip ${name.toLowerCase()}" title="equip ${name.toLowerCase()}">${name}</span>`)
+                .replace(/\[equipped\](.*?)\[\/equipped\]/g, (_, name) =>
+                    `<span class="tag-item cmd-link" data-cmd="unequip ${name.toLowerCase()}" title="unequip ${name.toLowerCase()}">${name}</span>`)
                 .replace(/\[container\](.*?)\[\/container\]/g, (_, name) =>
                     `<span class="tag-container cmd-link" data-cmd="search ${name.toLowerCase()}" title="search ${name.toLowerCase()}">${name}</span>`)
                 .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,       '<span style="color:$1">$2</span>');
@@ -555,7 +557,7 @@ createApp({
                 .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
                 .replace(/\[c=[^\]]+\]/g, '')
                 .replace(/\[\/c\]/g, '')
-                .replace(/\[\/?(?:room|exit|item|invitem|container|narrate)\]/g, '');
+                .replace(/\[\/?(?:room|exit|item|invitem|equipped|container|narrate)\]/g, '');
         },
 
         pct(val, max) {
