@@ -1,7 +1,7 @@
 package t1tanic.kingdomrpg.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import t1tanic.kingdomrpg.domain.Item;
+import t1tanic.kingdomrpg.domain.item.Item;
 
 import java.util.List;
 

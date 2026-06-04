@@ -8,8 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import t1tanic.kingdomrpg.domain.Player;
-import t1tanic.kingdomrpg.domain.Room;
+import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.PlayerRepository;
 import t1tanic.kingdomrpg.repository.RoomRepository;
 

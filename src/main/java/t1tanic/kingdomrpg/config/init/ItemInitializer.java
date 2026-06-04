@@ -1,9 +1,10 @@
-package t1tanic.kingdomrpg.config;
+package t1tanic.kingdomrpg.config.init;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.*;
+import t1tanic.kingdomrpg.domain.item.*;
+import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
 import java.util.List;

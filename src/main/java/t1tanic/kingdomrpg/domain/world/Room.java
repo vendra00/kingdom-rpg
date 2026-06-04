@@ -1,9 +1,10 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.world;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.BaseEntity;
 
 @Entity
 @Data

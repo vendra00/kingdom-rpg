@@ -1,5 +1,11 @@
 'use strict';
 
+import { STEPS, RACES, CLASSES, GENDERS, BACKGROUNDS,
+         ATTR_DEFS, TOTAL_POINTS, POINT_COSTS, ATTR_MIN, ATTR_MAX,
+         CANTRIPS, CANTRIP_SLOTS,
+         COMMAND_COMPLETIONS, DIRECTION_COMPLETIONS, DICE_COMPLETIONS, ABILITY_COMPLETIONS
+       } from './data.js';
+
 const { createApp } = Vue;
 
 createApp({

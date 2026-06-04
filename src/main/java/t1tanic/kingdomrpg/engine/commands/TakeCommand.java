@@ -3,8 +3,8 @@ package t1tanic.kingdomrpg.engine.commands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.Item;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.item.Item;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 import t1tanic.kingdomrpg.repository.PlayerRepository;
 

@@ -1,15 +1,18 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.character;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import t1tanic.kingdomrpg.domain.BaseEntity;
+import t1tanic.kingdomrpg.domain.magic.Cantrip;
+import t1tanic.kingdomrpg.domain.world.Room;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static t1tanic.kingdomrpg.domain.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.Attribute.*;
 
 @Entity
 @Data

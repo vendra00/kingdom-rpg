@@ -1,8 +1,8 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.Ability;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Ability;
+import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.engine.MarkupTag;
 import t1tanic.kingdomrpg.engine.dice.Dice;
 import t1tanic.kingdomrpg.engine.dice.DiceRoll;

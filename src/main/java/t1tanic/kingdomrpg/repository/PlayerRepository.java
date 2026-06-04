@@ -1,7 +1,7 @@
 package t1tanic.kingdomrpg.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Player;
 
 import java.util.List;
 import java.util.Optional;

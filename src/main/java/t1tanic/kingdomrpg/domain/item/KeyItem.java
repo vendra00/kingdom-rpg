@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.item;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;

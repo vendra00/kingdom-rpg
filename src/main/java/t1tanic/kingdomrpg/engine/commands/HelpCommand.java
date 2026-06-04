@@ -1,7 +1,7 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Player;
 
 @Component
 public class HelpCommand implements Command {

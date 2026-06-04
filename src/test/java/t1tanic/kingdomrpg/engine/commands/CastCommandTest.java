@@ -2,9 +2,9 @@ package t1tanic.kingdomrpg.engine.commands;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import t1tanic.kingdomrpg.domain.Cantrip;
-import t1tanic.kingdomrpg.domain.CantripEffect;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.magic.Cantrip;
+import t1tanic.kingdomrpg.domain.magic.CantripEffect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

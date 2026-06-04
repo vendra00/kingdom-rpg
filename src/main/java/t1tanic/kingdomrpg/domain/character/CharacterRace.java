@@ -1,8 +1,8 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.character;
 
 import java.util.Map;
 
-import static t1tanic.kingdomrpg.domain.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.Attribute.*;
 
 public enum CharacterRace {
 

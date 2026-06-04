@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.character;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;

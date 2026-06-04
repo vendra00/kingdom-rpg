@@ -1,9 +1,12 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.item;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import t1tanic.kingdomrpg.domain.BaseEntity;
+import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.world.Room;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)

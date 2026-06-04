@@ -1,10 +1,10 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.character;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static t1tanic.kingdomrpg.domain.AbilityCategory.*;
+import static t1tanic.kingdomrpg.domain.character.AbilityCategory.*;
 
 public enum Ability {
 
@@ -177,11 +177,9 @@ public enum Ability {
     /** Look up by id string (case-insensitive, partial match allowed). */
     public static Optional<Ability> fromInput(String input) {
         String lower = input.trim().toLowerCase();
-        // Exact id match first
         for (Ability a : values()) {
             if (a.id.equals(lower)) return Optional.of(a);
         }
-        // Then partial display-name match
         for (Ability a : values()) {
             if (a.displayName.toLowerCase().contains(lower)) return Optional.of(a);
         }

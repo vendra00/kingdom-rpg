@@ -1,7 +1,7 @@
 package t1tanic.kingdomrpg.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import t1tanic.kingdomrpg.domain.Cantrip;
+import t1tanic.kingdomrpg.domain.magic.Cantrip;
 
 import java.util.List;
 

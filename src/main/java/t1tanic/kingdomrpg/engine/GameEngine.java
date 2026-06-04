@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import t1tanic.kingdomrpg.domain.*;
+import t1tanic.kingdomrpg.domain.character.*;
+import t1tanic.kingdomrpg.domain.magic.Cantrip;
+import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.CantripRepository;
 import t1tanic.kingdomrpg.repository.PlayerRepository;
 import t1tanic.kingdomrpg.repository.RoomRepository;
@@ -15,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static t1tanic.kingdomrpg.domain.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.Attribute.*;
 
 @Slf4j
 @Service

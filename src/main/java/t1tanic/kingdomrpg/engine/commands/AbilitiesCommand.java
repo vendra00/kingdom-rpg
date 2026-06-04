@@ -1,9 +1,9 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.Ability;
-import t1tanic.kingdomrpg.domain.AbilityCategory;
-import t1tanic.kingdomrpg.domain.Player;
+import t1tanic.kingdomrpg.domain.character.Ability;
+import t1tanic.kingdomrpg.domain.character.AbilityCategory;
+import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.engine.MarkupTag;
 
 @Component

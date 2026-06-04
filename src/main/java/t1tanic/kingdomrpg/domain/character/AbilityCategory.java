@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain;
+package t1tanic.kingdomrpg.domain.character;
 
 public enum AbilityCategory {
 
