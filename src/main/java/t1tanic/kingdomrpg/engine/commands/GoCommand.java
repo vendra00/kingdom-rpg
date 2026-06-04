@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.domain.Room;
@@ -9,6 +10,7 @@ import t1tanic.kingdomrpg.repository.RoomRepository;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GoCommand implements Command {
@@ -45,6 +47,7 @@ public class GoCommand implements Command {
             return "That path leads nowhere.";
         }
 
+        log.debug("Moving '{}' → '{}'", current.getName(), nextRoom.getName());
         player.setCurrentRoom(nextRoom);
         playerRepository.save(player);
 

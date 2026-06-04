@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.*;
 import t1tanic.kingdomrpg.repository.ItemRepository;
@@ -8,6 +9,7 @@ import t1tanic.kingdomrpg.repository.ItemRepository;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ItemInitializer {
@@ -15,7 +17,8 @@ public class ItemInitializer {
     private final ItemRepository itemRepository;
 
     public void seed(Map<String, Room> rooms) {
-        itemRepository.saveAll(List.of(
+        log.debug("Seeding items...");
+        var items = List.of(
 
             weapon("Short Sword",   "A battered but serviceable blade.",      rooms.get("armory"),   1_500, "1d6",  "slashing"),
             weapon("Dagger",        "Small, light, and easy to conceal.",      rooms.get("armory"),     500, "1d4",  "piercing"),
@@ -29,7 +32,9 @@ public class ItemInitializer {
 
             keyItem("Ancient Scroll", "Covered in faded runes you can't quite read.", rooms.get("library"), 200),
             keyItem("Rusty Key",      "Heavy iron. What does it open?",               rooms.get("hallway"), 150)
-        ));
+        );
+        itemRepository.saveAll(items);
+        log.info("Seeded {} items", items.size());
     }
 
     private Weapon weapon(String name, String desc, Room room, int grams, String dice, String dmgType) {

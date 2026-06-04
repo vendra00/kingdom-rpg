@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Item;
 import t1tanic.kingdomrpg.domain.Player;
@@ -9,6 +10,7 @@ import t1tanic.kingdomrpg.repository.PlayerRepository;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TakeCommand implements Command {
@@ -33,6 +35,8 @@ public class TakeCommand implements Command {
     private String pickUp(Player player, Item item) {
         int newCarry = player.getResources().getCarryWeight() + item.getWeightGrams();
         if (newCarry > player.getMaxCarryWeight()) {
+            log.warn("Carry limit exceeded — '{}' ({} g) would bring total to {} g / {} g max",
+                item.getName(), item.getWeightGrams(), newCarry, player.getMaxCarryWeight());
             return "Too heavy! You can't carry the %s (%.2f kg). Carrying %.2f / %.2f kg.".formatted(
                 item.getName(),
                 item.getWeightGrams()        / 1000.0,
@@ -40,6 +44,8 @@ public class TakeCommand implements Command {
                 player.getMaxCarryWeight()   / 1000.0
             );
         }
+        log.debug("Picked up '{}' ({} g) — carrying {}/{} g",
+            item.getName(), item.getWeightGrams(), newCarry, player.getMaxCarryWeight());
         item.setRoom(null);
         item.setPlayer(player);
         itemRepository.save(item);

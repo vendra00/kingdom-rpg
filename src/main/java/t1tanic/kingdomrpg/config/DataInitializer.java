@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import t1tanic.kingdomrpg.repository.RoomRepository;
 
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataInitializer {
@@ -20,10 +22,14 @@ public class DataInitializer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void seedWorld() {
-        if (roomRepository.count() > 0) return;
-
+        if (roomRepository.count() > 0) {
+            log.info("World already seeded — skipping");
+            return;
+        }
+        log.info("Seeding world...");
         Map<String, Room> rooms = roomInitializer.seed();
         itemInitializer.seed(rooms);
         cantripInitializer.seed();
+        log.info("World seeded — {} rooms ready", rooms.size());
     }
 }

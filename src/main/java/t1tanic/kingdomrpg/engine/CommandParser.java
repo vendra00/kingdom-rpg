@@ -2,12 +2,14 @@ package t1tanic.kingdomrpg.engine;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.engine.commands.*;
 
 import java.util.Arrays;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CommandParser {
@@ -32,6 +34,7 @@ public class CommandParser {
         String   verb  = parts[0];
         String[] args  = Arrays.copyOfRange(parts, 1, parts.length);
 
+        log.debug("Dispatching '{}'", verb);
         return meterRegistry.timer("game.command.duration", "verb", verb)
                             .record(() -> dispatch(player, verb, args));
     }

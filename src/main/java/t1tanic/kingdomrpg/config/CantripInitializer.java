@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Cantrip;
 import t1tanic.kingdomrpg.domain.CantripEffect;
@@ -10,6 +11,7 @@ import java.util.List;
 
 import static t1tanic.kingdomrpg.domain.CantripEffect.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CantripInitializer {
@@ -17,7 +19,8 @@ public class CantripInitializer {
     private final CantripRepository cantripRepository;
 
     public void seed() {
-        cantripRepository.saveAll(List.of(
+        log.debug("Seeding cantrips...");
+        var cantrips = List.of(
 
             // ── Evocation (damage) ─────────────────────────────
             c("fire_bolt",    "Fire Bolt",       "Evocation",
@@ -90,7 +93,9 @@ public class CantripInitializer {
             c("spare_dying", "Spare the Dying",  "Necromancy",
               "Touch a living creature at 0 hit points. It becomes stable and ceases making death saving throws.",
               "cleric", null, HEALING)
-        ));
+        );
+        cantripRepository.saveAll(cantrips);
+        log.info("Seeded {} cantrips", cantrips.size());
     }
 
     private Cantrip c(String id, String name, String school, String desc,

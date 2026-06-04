@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Item;
 import t1tanic.kingdomrpg.domain.Player;
@@ -9,6 +10,7 @@ import t1tanic.kingdomrpg.repository.PlayerRepository;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DropCommand implements Command {
@@ -31,6 +33,7 @@ public class DropCommand implements Command {
     }
 
     private String drop(Player player, Item item) {
+        log.debug("Dropped '{}' in '{}'", item.getName(), player.getCurrentRoom().getName());
         item.setPlayer(null);
         item.setRoom(player.getCurrentRoom());
         itemRepository.save(item);

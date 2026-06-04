@@ -1,6 +1,7 @@
 package t1tanic.kingdomrpg.engine;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import t1tanic.kingdomrpg.domain.*;
@@ -16,6 +17,7 @@ import java.util.Set;
 
 import static t1tanic.kingdomrpg.domain.Attribute.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameEngine {
@@ -32,6 +34,7 @@ public class GameEngine {
             createNewPlayer(name, payload);
             return "Character created!  Type 'help' for commands.\n";
         }
+        log.info("Returning player reconnected");
         return "Welcome back, " + name + "!  Your adventure continues.\n";
     }
 
@@ -52,6 +55,7 @@ public class GameEngine {
         String genderStr     = (String) payload.getOrDefault("gender",          "other");
         String backgroundStr = (String) payload.getOrDefault("background",      "noble");
 
+        log.info("Creating new player — {}/{} background:{}", raceStr, classStr, backgroundStr);
         CharacterRace       race = CharacterRace.fromString(raceStr);
         CharacterBackground bg   = CharacterBackground.fromString(backgroundStr);
 

@@ -1,10 +1,12 @@
 package t1tanic.kingdomrpg.engine.commands;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Cantrip;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.engine.MarkupTag;
 
+@Slf4j
 @Component
 public class CastCommand implements Command {
 
@@ -24,6 +26,7 @@ public class CastCommand implements Command {
     }
 
     private String castFlavor(Cantrip c) {
+        log.debug("Casting '{}' ({})", c.getName(), c.getEffect());
         String spellName = MarkupTag.ROOM.wrap(c.getName());
         String channel   = c.getEffect().channel(spellName);
 
