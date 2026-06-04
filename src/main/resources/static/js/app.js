@@ -12,7 +12,11 @@ createApp({
     data() {
         return {
             // ── Screen ──────────────────────────────────────
-            screen: 'login',   // 'login' | 'wizard' | 'game'
+            screen: 'title',   // 'title' | 'login' | 'wizard' | 'load' | 'game'
+
+            // ── Saves ───────────────────────────────────────
+            saves:       [],
+            savesLoaded: false,
 
             // ── Player ──────────────────────────────────────
             playerName: '',
@@ -72,6 +76,8 @@ createApp({
         availableCantrips() { return this.char.characterClass ? CANTRIPS.filter(c => c.classes.includes(this.char.characterClass)) : []; },
         selectedCantrips()  { return CANTRIPS.filter(c => this.char.cantrips.includes(c.id)); },
 
+        hasSaves() { return this.saves.length > 0; },
+
         // ── Summary lookups ─────────────────────────────────
         summaryRace()   { return RACES.find(r => r.id === this.char.race); },
         summaryClass()  { return CLASSES.find(c => c.id === this.char.characterClass); },
@@ -80,6 +86,59 @@ createApp({
     },
 
     methods: {
+        // ── Title menu ───────────────────────────────────────
+        goToNewGame() { this.screen = 'login'; },
+
+        async goToLoad() {
+            await this.fetchSaves();
+            this.screen = 'load';
+        },
+
+        async goToContinue() {
+            if (!this.saves.length) return;
+            const s = this.saves[0];
+            this.playerName = s.name;
+            this.screen = 'game';
+            await this.$nextTick();
+            this.connectDirect(s.name);
+        },
+
+        goToExit() { window.close(); },
+
+        async fetchSaves() {
+            try {
+                const r  = await fetch('/api/players');
+                this.saves = await r.json();
+            } catch (_) {
+                this.saves = [];
+            }
+            this.savesLoaded = true;
+        },
+
+        loadSave(s) {
+            this.playerName = s.name;
+            this.screen = 'game';
+            this.$nextTick(() => this.connectDirect(s.name));
+        },
+
+        connectDirect(name) {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            this.ws = new WebSocket(protocol + '//' + location.host + '/game-ws');
+            this.ws.onopen    = () => {
+                this.ws.send(JSON.stringify({ type: 'join', name }));
+                this.$nextTick(() => this.$refs.commandInput?.focus());
+            };
+            this.ws.onmessage = e => { const m = JSON.parse(e.data); this.addMessage(m.text, m.type); };
+            this.ws.onclose   = () => this.addMessage('Connection closed. Refresh to reconnect.', 'error');
+            this.ws.onerror   = () => this.addMessage('WebSocket error — is the server running?', 'error');
+        },
+
+        fmtDate(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
+
         // ── Wizard navigation ────────────────────────────────
         goToWizard() {
             if (!this.playerName.trim()) return;
@@ -243,6 +302,7 @@ createApp({
             load();
             window.speechSynthesis.addEventListener('voiceschanged', load);
         }
+        this.fetchSaves();
     },
 
 }).mount('#app');

@@ -20,8 +20,37 @@
         </div>
     </header>
 
+    <!-- ── Title ─────────────────────────────────────────────── -->
+    <div id="title-screen" v-if="screen === 'title'">
+        <div id="title-box">
+            <pre id="title-art">
+ ██╗  ██╗██╗███╗   ██╗ ██████╗ ██████╗  ██████╗ ███╗   ███╗
+ ██║ ██╔╝██║████╗  ██║██╔════╝ ██╔══██╗██╔═══██╗████╗ ████║
+ █████╔╝ ██║██╔██╗ ██║██║  ███╗██║  ██║██║   ██║██╔████╔██║
+ ██╔═██╗ ██║██║╚██╗██║██║   ██║██║  ██║██║   ██║██║╚██╔╝██║
+ ██║  ██╗██║██║ ╚████║╚██████╔╝██████╔╝╚██████╔╝██║ ╚═╝ ██║
+ ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
+
+          ██████╗ ██████╗  ██████╗
+          ██╔══██╗██╔══██╗██╔════╝
+          ██████╔╝██████╔╝██║  ███╗
+          ██╔══██╗██╔═══╝ ██║   ██║
+          ██║  ██║██║     ╚██████╔╝
+          ╚═╝  ╚═╝╚═╝      ╚═════╝</pre>
+            <p v-if="!savesLoaded" class="title-loading">· · ·</p>
+            <div id="title-menu">
+                <button class="menu-btn" @click="goToNewGame">New Game</button>
+                <button class="menu-btn" @click="goToLoad"
+                        :disabled="!savesLoaded || !hasSaves">Load</button>
+                <button class="menu-btn" @click="goToContinue"
+                        :disabled="!savesLoaded || !hasSaves">Continue</button>
+                <button class="menu-btn menu-btn-exit" @click="goToExit">Exit</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Login ───────────────────────────────────────────── -->
-    <div id="login-screen" v-if="screen === 'login'">
+    <div id="login-screen" v-else-if="screen === 'login'">
         <div id="login-box">
             <p class="login-title">Enter your name, traveller</p>
             <input type="text" id="player-name" placeholder="Your name..."
@@ -30,6 +59,24 @@
                    @keydown.enter="goToWizard">
             <button id="start-btn" @click="goToWizard">Begin Adventure</button>
             <p class="login-hint">Press Enter or click the button</p>
+        </div>
+    </div>
+
+    <!-- ── Load ──────────────────────────────────────────────── -->
+    <div id="load-screen" v-else-if="screen === 'load'">
+        <div id="load-box">
+            <p class="load-title">LOAD GAME</p>
+            <p v-if="!saves.length" class="load-empty">No saved games found.</p>
+            <div class="save-list" v-else>
+                <div v-for="s in saves" :key="s.name"
+                     class="save-entry" @click="loadSave(s)">
+                    <span class="save-name">{{ s.name }}</span>
+                    <span class="save-details">{{ cap(s.race) }} {{ cap(s.characterClass) }}</span>
+                    <span class="save-date">{{ fmtDate(s.lastPlayed) }}</span>
+                </div>
+            </div>
+            <button class="menu-btn" style="margin-top:20px;align-self:flex-start;"
+                    @click="screen = 'title'">&#8592; Back</button>
         </div>
     </div>
 
