@@ -9,6 +9,9 @@ public enum Attribute {
     WISDOM,
     CHARISMA;
 
+    /** Three-letter abbreviation used in UI display, e.g. STR, DEX. */
+    public String abbrev() { return name().substring(0, 3); }
+
     /** Lowercase key matching JSON payload keys sent by the frontend. */
     public String key() {
         return name().toLowerCase();

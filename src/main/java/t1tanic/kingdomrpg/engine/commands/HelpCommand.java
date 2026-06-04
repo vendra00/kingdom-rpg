@@ -18,6 +18,9 @@ public class HelpCommand implements Command {
               status            - View your character stats
               spells            - List your cantrips
               cast [cantrip]    - Cast a cantrip
+              roll [notation]   - Roll dice  (d20, 2d6, 1d8+3 …)
+              abilities / hab   - Open your ability book
+              attempt [name]    - Attempt an ability check
               help              - Show this message""";
     }
 }

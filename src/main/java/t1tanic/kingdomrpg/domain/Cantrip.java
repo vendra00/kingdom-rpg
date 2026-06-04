@@ -22,6 +22,7 @@ public class Cantrip {
 
     private String allowedClasses; // comma-separated: "mage,rogue"
     private String damageType;     // null if non-damage
+    private String damageDice;     // e.g. "1d8" — null if non-damage
 
     @Enumerated(EnumType.STRING)
     private CantripEffect effect;

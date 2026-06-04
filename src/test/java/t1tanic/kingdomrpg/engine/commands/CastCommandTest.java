@@ -31,26 +31,27 @@ class CastCommandTest {
     }
 
     @Test
-    void damageCantrip_includesNoEnemyMessage() {
+    void damageCantrip_rollsDamageAndIncludesNoEnemyMessage() {
         player.getLearnedCantrips().add(new Cantrip(
             "fire_bolt", "Fire Bolt", "Evocation",
-            "Hurl a mote of fire.", "mage", "fire", CantripEffect.DAMAGE));
+            "Hurl a mote of fire.", "mage", "fire", "1d10", CantripEffect.DAMAGE));
 
         String result = castCommand.execute(player, new String[]{"fire", "bolt"});
 
         assertThat(result).contains("Fire Bolt");
-        assertThat(result).contains("No enemy is present");
+        assertThat(result).contains("fire damage");
+        assertThat(result).contains("No enemy present");
     }
 
     @Test
     void utilityCantrip_doesNotIncludeCombatMessage() {
         player.getLearnedCantrips().add(new Cantrip(
             "mage_hand", "Mage Hand", "Conjuration",
-            "A spectral floating hand.", "mage", null, CantripEffect.UTILITY));
+            "A spectral floating hand.", "mage", null, null, CantripEffect.UTILITY));
 
         String result = castCommand.execute(player, new String[]{"mage", "hand"});
 
         assertThat(result).contains("Mage Hand");
-        assertThat(result).doesNotContain("No enemy is present");
+        assertThat(result).doesNotContain("No enemy present");
     }
 }

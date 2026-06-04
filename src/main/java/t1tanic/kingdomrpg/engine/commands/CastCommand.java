@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.Cantrip;
 import t1tanic.kingdomrpg.domain.Player;
 import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.dice.Dice;
+import t1tanic.kingdomrpg.engine.dice.DiceRoll;
 
 @Slf4j
 @Component
@@ -30,11 +32,17 @@ public class CastCommand implements Command {
         String spellName = MarkupTag.ROOM.wrap(c.getName());
         String channel   = c.getEffect().channel(spellName);
 
-        String outcome = c.getDamageType() != null
-            ? "\n" + MarkupTag.NARRATE.wrap(c.getDescription())
-              + "\n\nNo enemy is present — the energy dissipates harmlessly."
-              + "\n(Use " + MarkupTag.EXIT.wrap("attack") + " during combat to unleash this spell.)"
-            : "\n" + MarkupTag.NARRATE.wrap(c.getDescription());
+        String outcome;
+        if (c.getDamageDice() != null) {
+            DiceRoll roll = Dice.roll(c.getDamageDice());
+            String dmgLine = roll.format() + " " + c.getDamageType() + " damage";
+            outcome = "\n" + MarkupTag.NARRATE.wrap(c.getDescription())
+                + "\n\nDamage roll — " + MarkupTag.ITEM.wrap(dmgLine)
+                + "\n(No enemy present — the energy dissipates harmlessly."
+                + "  Use " + MarkupTag.EXIT.wrap("attack") + " during combat.)";
+        } else {
+            outcome = "\n" + MarkupTag.NARRATE.wrap(c.getDescription());
+        }
 
         return channel + outcome;
     }
