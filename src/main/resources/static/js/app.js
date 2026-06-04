@@ -40,6 +40,9 @@ createApp({
             cmdHistory:  [],
             historyIdx:  -1,
 
+            // ── Autocomplete ─────────────────────────────────
+            ac: { items: [], idx: -1 },
+
             // ── Narrator ────────────────────────────────────
             narratorEnabled: false,
             availableVoices: [],
@@ -206,6 +209,109 @@ createApp({
             return { damage:'var(--red)', debuff:'#ff8c00', buff:'var(--green)', utility:'#00cfff', healing:'var(--yellow)' }[effect] || 'var(--gray)';
         },
 
+        // ── Autocomplete ─────────────────────────────────────
+        updateAc() {
+            const text = this.commandText;
+            if (!text.trim()) { this.ac.items = []; this.ac.idx = -1; return; }
+
+            const endsWithSpace = text.endsWith(' ');
+            const words   = text.trimEnd().split(/\s+/);
+            const verb    = words[0].toLowerCase();
+            const partial = endsWithSpace ? '' : words[words.length - 1].toLowerCase();
+            const isFirst = words.length === 1 && !endsWithSpace;
+
+            let pool;
+            if (isFirst) {
+                pool = COMMAND_COMPLETIONS;
+            } else if (['go', 'move'].includes(verb)) {
+                pool = DIRECTION_COMPLETIONS;
+            } else if (['cast', 'use'].includes(verb)) {
+                pool = this.cantripCompletions();
+            } else if (['attempt', 'try'].includes(verb)) {
+                pool = ABILITY_COMPLETIONS;
+            } else if (verb === 'roll') {
+                pool = DICE_COMPLETIONS;
+            } else {
+                pool = [];
+            }
+
+            this.ac.items = pool.filter(item =>
+                item.value.toLowerCase().startsWith(partial)
+            ).slice(0, 8);
+            this.ac.idx = -1;
+        },
+
+        cantripCompletions() {
+            const known = this.char.cantrips;
+            const src   = known.length ? CANTRIPS.filter(c => known.includes(c.id)) : CANTRIPS;
+            return src.map(c => ({ value: c.name.toLowerCase(), hint: c.school + ' · ' + c.effect }));
+        },
+
+        acceptAc(item) {
+            const text          = this.commandText;
+            const endsWithSpace = text.endsWith(' ');
+            const words         = text.trimEnd().split(/\s+/);
+            const isFirst       = words.length === 1 && !endsWithSpace;
+
+            if (endsWithSpace) {
+                words.push(item.value);
+            } else {
+                words[words.length - 1] = item.value;
+            }
+
+            const NEEDS_ARGS = new Set(['go','move','take','get','pick','drop','cast','use','roll','attempt','try']);
+            const newText    = words.join(' ');
+
+            if (isFirst && NEEDS_ARGS.has(words[0].toLowerCase())) {
+                this.commandText = newText + ' ';
+                this.updateAc();
+            } else {
+                this.commandText = newText;
+                this.ac.items = [];
+                this.ac.idx   = -1;
+            }
+            this.$nextTick(() => this.$refs.commandInput?.focus());
+        },
+
+        closeAc() { this.ac.items = []; this.ac.idx = -1; },
+
+        handleKey(e) {
+            if (this.ac.items.length) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.ac.idx = (this.ac.idx + 1) % this.ac.items.length;
+                    this.$nextTick(() => this.scrollAcActive());
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.ac.idx = this.ac.idx <= 0
+                        ? this.ac.items.length - 1 : this.ac.idx - 1;
+                    this.$nextTick(() => this.scrollAcActive());
+                    return;
+                }
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    this.acceptAc(this.ac.items[Math.max(0, this.ac.idx)]);
+                    return;
+                }
+                if (e.key === 'Escape') { e.preventDefault(); this.closeAc(); return; }
+                if (e.key === 'Enter' && this.ac.idx >= 0) {
+                    e.preventDefault();
+                    this.acceptAc(this.ac.items[this.ac.idx]);
+                    return;
+                }
+            } else {
+                if (e.key === 'ArrowUp')   { e.preventDefault(); this.historyUp();   return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); this.historyDown(); return; }
+            }
+            if (e.key === 'Enter') this.sendCommand();
+        },
+
+        scrollAcActive() {
+            document.querySelector('#ac-list .ac-active')?.scrollIntoView({ block: 'nearest' });
+        },
+
         // ── Game ─────────────────────────────────────────────
         startGame() {
             this.screen = 'game';
@@ -234,6 +340,7 @@ createApp({
             const text = this.commandText.trim();
             this.commandText = '';
             this.historyIdx  = -1;
+            this.closeAc();
             if (!text) return;
             this.cmdHistory.unshift(text);
             this.addMessage('> ' + text, 'command');

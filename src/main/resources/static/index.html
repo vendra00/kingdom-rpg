@@ -285,13 +285,22 @@
             </div>
         </div>
         <div id="input-row">
+            <!-- Autocomplete dropdown (floats above the input row) -->
+            <div id="ac-list" v-if="ac.items.length" @mousedown.prevent>
+                <div v-for="(item, i) in ac.items" :key="item.value"
+                     class="ac-item" :class="{ 'ac-active': i === ac.idx }"
+                     @click="acceptAc(item)">
+                    <span class="ac-value">{{ item.value }}</span>
+                    <span class="ac-hint" v-if="item.hint">{{ item.hint }}</span>
+                </div>
+            </div>
             <span id="prompt">&gt;</span>
             <input type="text" id="command-input" ref="commandInput"
                    placeholder="Type a command..." autocomplete="off" spellcheck="false"
                    v-model="commandText"
-                   @keydown.enter="sendCommand"
-                   @keydown.up.prevent="historyUp"
-                   @keydown.down.prevent="historyDown">
+                   @keydown="handleKey"
+                   @input="updateAc"
+                   @blur="closeAc">
         </div>
     </div>
 
