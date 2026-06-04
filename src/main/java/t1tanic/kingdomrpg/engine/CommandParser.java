@@ -36,6 +36,8 @@ public class CommandParser {
     private final AttemptCommand    attemptCommand;
     private final HelpCommand       helpCommand;
     private final SearchCommand     searchCommand;
+    private final EquipCommand      equipCommand;
+    private final UnequipCommand    unequipCommand;
     private final MeterRegistry    meterRegistry;
 
     /**
@@ -89,6 +91,8 @@ public class CommandParser {
             case "abilities", "ability", "hab"       -> abilitiesCommand.execute(player, args);
             case "attempt", "try"                    -> attemptCommand.execute(player, args);
             case "search", "examine", "inspect"      -> searchCommand.execute(player, args);
+            case "equip", "wear"                     -> equipCommand.execute(player, args);
+            case "unequip", "remove"                 -> unequipCommand.execute(player, args);
             case "help", "?"                         -> helpCommand.execute(player, args);
             default -> "I don't understand '" + verb + "'. Type 'help' for commands.";
         };

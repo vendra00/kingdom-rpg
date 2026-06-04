@@ -29,7 +29,17 @@ public enum MarkupTag {
     /**
      * Used for mechanical game data (dice rolls, DC results, modifiers) routed to the nerd stats panel.
      */
-    NERD("nerd");
+    NERD("nerd"),
+    /**
+     * Used for interactive containers in the environment (chests, crates, barrels) that can be searched.
+     * Rendered as a clickable element prefilling "search &lt;name&gt;" in the command input.
+     */
+    CONTAINER("container"),
+    /**
+     * Used for items already in the player's inventory.
+     * Rendered as a clickable element prefilling "equip &lt;name&gt;" in the command input.
+     */
+    INVITEM("invitem");
 
     private final String tag;
 

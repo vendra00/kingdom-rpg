@@ -348,7 +348,7 @@
             <div id="game-main">
 
                 <!-- Main output -->
-                <div id="output" ref="outputEl">
+                <div id="output" ref="outputEl" @click="handleOutputClick">
                     <div v-for="(msg, i) in messages" :key="i"
                          class="line" :class="msg.type">
                         <span class="line-content" v-html="parseMarkup(msg.text)"></span>

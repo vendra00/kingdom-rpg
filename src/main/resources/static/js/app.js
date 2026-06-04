@@ -6,7 +6,7 @@ import { STEPS, RACES, CLASSES, GENDERS, BACKGROUNDS,
          ATTR_DEFS, TOTAL_POINTS, POINT_COSTS, ATTR_MIN, ATTR_MAX,
          CANTRIPS, CANTRIP_SLOTS,
          COMMAND_COMPLETIONS, DIRECTION_COMPLETIONS, DICE_COMPLETIONS, ABILITY_COMPLETIONS,
-         TAKE_COMPLETIONS, DROP_COMPLETIONS
+         TAKE_COMPLETIONS, DROP_COMPLETIONS, UNEQUIP_COMPLETIONS
        } from './data.js';
 
 const { createApp } = Vue;
@@ -306,6 +306,10 @@ createApp({
                 pool = TAKE_COMPLETIONS;
             } else if (['drop'].includes(verb)) {
                 pool = DROP_COMPLETIONS;
+            } else if (['equip', 'wear'].includes(verb)) {
+                pool = [];
+            } else if (['unequip', 'remove'].includes(verb)) {
+                pool = UNEQUIP_COMPLETIONS;
             } else if (['cast', 'use'].includes(verb)) {
                 pool = this.cantripCompletions();
             } else if (['attempt', 'try'].includes(verb)) {
@@ -340,7 +344,7 @@ createApp({
                 words[words.length - 1] = item.value;
             }
 
-            const NEEDS_ARGS = new Set(['go','move','take','get','pick','drop','cast','use','roll','attempt','try']);
+            const NEEDS_ARGS = new Set(['go','move','take','get','pick','drop','cast','use','roll','attempt','try','equip','wear','unequip','remove']);
             const newText    = words.join(' ');
 
             if (isFirst && NEEDS_ARGS.has(words[0].toLowerCase())) {
@@ -499,8 +503,21 @@ createApp({
                 .replace(/\[narrate\](.*?)\[\/narrate\]/g,    '$1')
                 .replace(/\[room\](.*?)\[\/room\]/g,          '<span class="tag-room">$1</span>')
                 .replace(/\[exit\](.*?)\[\/exit\]/g,          '<span class="tag-exit">$1</span>')
-                .replace(/\[item\](.*?)\[\/item\]/g,          '<span class="tag-item">$1</span>')
+                .replace(/\[item\](.*?)\[\/item\]/g,          (_, name) =>
+                    `<span class="tag-item cmd-link" data-cmd="take ${name.toLowerCase()}" title="take ${name.toLowerCase()}">${name}</span>`)
+                .replace(/\[invitem\](.*?)\[\/invitem\]/g,    (_, name) =>
+                    `<span class="tag-item cmd-link" data-cmd="equip ${name.toLowerCase()}" title="equip ${name.toLowerCase()}">${name}</span>`)
+                .replace(/\[container\](.*?)\[\/container\]/g, (_, name) =>
+                    `<span class="tag-container cmd-link" data-cmd="search ${name.toLowerCase()}" title="search ${name.toLowerCase()}">${name}</span>`)
                 .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,       '<span style="color:$1">$2</span>');
+        },
+
+        handleOutputClick(e) {
+            const link = e.target.closest('.cmd-link');
+            if (!link || !link.dataset.cmd) return;
+            this.commandText = link.dataset.cmd;
+            Sounds.click();
+            this.$nextTick(() => this.$refs.commandInput?.focus());
         },
 
         // ── Nerd mode ────────────────────────────────────────
@@ -528,7 +545,7 @@ createApp({
                 .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
                 .replace(/\[c=[^\]]+\]/g, '')
                 .replace(/\[\/c\]/g, '')
-                .replace(/\[\/?(?:room|exit|item|narrate)\]/g, '');
+                .replace(/\[\/?(?:room|exit|item|invitem|container|narrate)\]/g, '');
         },
 
         pct(val, max) {

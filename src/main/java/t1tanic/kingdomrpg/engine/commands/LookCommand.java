@@ -50,9 +50,9 @@ public class LookCommand implements Command {
         if (!containers.isEmpty()) {
             sb.append("\n\nYou notice: ").append(
                 containers.stream()
-                    .map(c -> MarkupTag.EXIT.wrap(c))
+                    .map(c -> MarkupTag.CONTAINER.wrap(c))
                     .collect(Collectors.joining(", "))
-            ).append("  (search <name> to investigate)");
+            ).append("  ").append(MarkupTag.color("#555555", "(click or type: search <name>)"));
         }
 
         return sb.toString().stripTrailing();

@@ -79,6 +79,19 @@ public class Player extends BaseEntity {
     private Set<Cantrip> learnedCantrips = new HashSet<>();
 
     /**
+     * Currently equipped items across the three body slots (main hand, off hand, body).
+     * The items remain in the player's inventory — this just tracks which slot each occupies.
+     * Getter is manually defined because Hibernate sets this to null when all FK columns are NULL.
+     */
+    @Embedded
+    private Equipment equipment = new Equipment();
+
+    public Equipment getEquipment() {
+        if (equipment == null) equipment = new Equipment();
+        return equipment;
+    }
+
+    /**
      * Room IDs where this player has already performed a perception scan.
      * Once a room is scanned (regardless of result), it cannot be scanned again.
      */

@@ -2,8 +2,10 @@ package t1tanic.kingdomrpg.engine.commands;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import t1tanic.kingdomrpg.domain.character.Equipment;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.item.*;
+import t1tanic.kingdomrpg.domain.item.enums.EquipmentSlot;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
@@ -46,6 +48,7 @@ public class InventoryCommand implements Command {
         Map<ItemTag, List<Item>> byTag = items.stream()
             .collect(Collectors.groupingBy(Item::getItemTag));
 
+        Equipment eq = player.getEquipment();
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (ItemTag tag : ItemTag.values()) {
@@ -55,15 +58,20 @@ public class InventoryCommand implements Command {
             first = false;
             sb.append(sectionHeader(tag.label()));
             for (Item item : group) {
-                sb.append("\n").append(itemBox(item));
+                sb.append("\n").append(itemBox(item, eq));
             }
         }
         return sb.toString();
     }
 
-    private String itemBox(Item item) {
+    private String itemBox(Item item, Equipment eq) {
         StringBuilder sb = new StringBuilder();
-        sb.append(boxTop(MarkupTag.ITEM.wrap(item.getName()))).append("\n");
+        EquipmentSlot slot = eq.slotOf(item);
+        String nameTag = MarkupTag.INVITEM.wrap(item.getName());
+        if (slot != null) {
+            nameTag += "  " + MarkupTag.color("#ffd700", "[E: " + slot.label() + "]");
+        }
+        sb.append(boxTop(nameTag)).append("\n");
         sb.append(boxLine(metaLine(item))).append("\n");
 
         String stats = statsLine(item);
@@ -118,7 +126,7 @@ public class InventoryCommand implements Command {
     private int visLen(String s) {
         return s.replaceAll("\\[c=[^\\]]+\\]", "")
                 .replace("[/c]", "")
-                .replaceAll("\\[/?(item|room|exit|narrate)\\]", "")
+                .replaceAll("\\[/?(item|invitem|room|exit|narrate|container)\\]", "")
                 .length();
     }
 }

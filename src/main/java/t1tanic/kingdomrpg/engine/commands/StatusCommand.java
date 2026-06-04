@@ -1,8 +1,11 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
+import t1tanic.kingdomrpg.domain.character.Equipment;
 import t1tanic.kingdomrpg.domain.character.enums.Attribute;
 import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.item.Item;
+import t1tanic.kingdomrpg.domain.item.enums.EquipmentSlot;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 
 import java.util.Arrays;
@@ -53,8 +56,24 @@ public class StatusCommand implements Command {
             .map(attr -> "  %-14s%2d  (%+d)".formatted(cap(attr.key()), attrs.get(attr), attrs.modifier(attr)))
             .collect(Collectors.joining("\n"));
 
-        return "%s\n%s\n\n%s\n\n── Attributes ─────────────────────\n%s"
-            .formatted(title, subline, vitals, attrSection);
+        String equippedSection = equippedSection(player.getEquipment());
+
+        return "%s\n%s\n\n%s\n\n── Attributes ─────────────────────\n%s\n\n── Equipped ────────────────────────\n%s"
+            .formatted(title, subline, vitals, attrSection, equippedSection);
+    }
+
+    private String equippedSection(Equipment eq) {
+        StringBuilder sb = new StringBuilder();
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            Item item = eq.getSlot(slot);
+            String slotLabel = "  %-10s".formatted(slot.label());
+            if (item != null) {
+                sb.append(slotLabel).append(MarkupTag.ITEM.wrap(item.getName())).append("\n");
+            } else {
+                sb.append(slotLabel).append(MarkupTag.color("#555555", "— empty —")).append("\n");
+            }
+        }
+        return sb.toString().stripTrailing();
     }
 
     private String hpColor(int hp, int max) {

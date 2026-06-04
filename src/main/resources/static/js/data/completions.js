@@ -17,6 +17,8 @@ export const COMMAND_COMPLETIONS = [
     { value: 'abilities',  hint: 'Open your ability book' },
     { value: 'attempt',    hint: 'Attempt an ability check' },
     { value: 'search',     hint: 'Search the room or a specific container' },
+    { value: 'equip',      hint: 'Equip an item from your inventory' },
+    { value: 'unequip',    hint: 'Remove an item from an equipped slot' },
     { value: 'help',       hint: 'Show all available commands' },
 ];
 
@@ -26,6 +28,12 @@ export const TAKE_COMPLETIONS = [
 
 export const DROP_COMPLETIONS = [
     { value: 'all', hint: 'Drop everything from your inventory' },
+];
+
+export const UNEQUIP_COMPLETIONS = [
+    { value: 'main hand', hint: 'Remove weapon from main hand' },
+    { value: 'off hand',  hint: 'Remove shield from off hand' },
+    { value: 'body',      hint: 'Remove armor from body slot' },
 ];
 
 export const DIRECTION_COMPLETIONS = [
