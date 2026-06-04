@@ -79,6 +79,17 @@ public class Player extends BaseEntity {
     private Set<Cantrip> learnedCantrips = new HashSet<>();
 
     /**
+     * Room IDs where this player has already performed a perception scan.
+     * Once a room is scanned (regardless of result), it cannot be scanned again.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "player_scanned_rooms", joinColumns = @JoinColumn(name = "player_id"))
+    @Column(name = "room_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Set<Long> scannedRoomIds = new HashSet<>();
+
+    /**
      * Computes the maximum health pool of the player.
      * <p>Formula: {@code 50 + (Constitution Modifier * 10)}</p>
      *

@@ -20,6 +20,14 @@ export const COMMAND_COMPLETIONS = [
     { value: 'help',       hint: 'Show all available commands' },
 ];
 
+export const TAKE_COMPLETIONS = [
+    { value: 'all', hint: 'Pick up everything visible in the room' },
+];
+
+export const DROP_COMPLETIONS = [
+    { value: 'all', hint: 'Drop everything from your inventory' },
+];
+
 export const DIRECTION_COMPLETIONS = [
     { value: 'north', hint: '' },
     { value: 'south', hint: '' },

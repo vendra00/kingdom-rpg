@@ -35,61 +35,40 @@ public class StatusCommand implements Command {
         var attrs = player.getAttributes();
         var res   = player.getResources();
 
-        String title = MarkupTag.ROOM.wrap("%s  ·  %s %s".formatted(
-            player.getName(),
-            cap(id.getRace()),
-            cap(id.getCharacterClass())
-        ));
-        String subline = "Background: %s  ·  %s  ·  %s".formatted(
-            cap(id.getBackground()),
-            player.getCurrentRoom().getName(),
-            cap(id.getGender())
-        );
+        String title   = MarkupTag.ROOM.wrap(player.getName() + "  ·  " + cap(id.getRace()) + " " + cap(id.getCharacterClass()));
+        String subline = "Background: " + cap(id.getBackground()) + "  ·  " + player.getCurrentRoom().getName() + "  ·  " + cap(id.getGender());
+
+        String hpCol  = hpColor(res.getHealth(),  player.getMaxHealth());
+        String vitals =
+            "  HP      " + MarkupTag.color(hpCol,    bar(res.getHealth(),  player.getMaxHealth()))
+                         + "  " + MarkupTag.color(hpCol,    res.getHealth()  + " / " + player.getMaxHealth())  + "\n" +
+            "  Mana    " + MarkupTag.color("#00bfff", bar(res.getMana(),    player.getMaxMana()))
+                         + "  " + MarkupTag.color("#00bfff", res.getMana()    + " / " + player.getMaxMana())    + "\n" +
+            "  Stamina " + MarkupTag.color("#ffd700", bar(res.getStamina(), player.getMaxStamina()))
+                         + "  " + MarkupTag.color("#ffd700", res.getStamina() + " / " + player.getMaxStamina()) + "\n" +
+            "  Carry   " + bar(res.getCarryWeight(), player.getMaxCarryWeight())
+                         + "  %.2f / %.2f kg".formatted(res.getCarryWeight() / 1000.0, player.getMaxCarryWeight() / 1000.0);
+
         String attrSection = Arrays.stream(Attribute.values())
-            .map(attr -> "  %-14s%2d  (%+d)".formatted(
-                cap(attr.key()), attrs.get(attr), attrs.modifier(attr)))
+            .map(attr -> "  %-14s%2d  (%+d)".formatted(cap(attr.key()), attrs.get(attr), attrs.modifier(attr)))
             .collect(Collectors.joining("\n"));
 
-        return """
-            %s
-            %s
-
-            HP       %3d / %-3d  %s
-            Mana     %3d / %-3d  %s
-            Stamina  %3d / %-3d  %s
-            Carry    %.2f / %.2f kg  %s
-
-            ── Attributes ────────────────────
-            %s""".formatted(
-            title, subline,
-            res.getHealth(),  player.getMaxHealth(),  bar(res.getHealth(),  player.getMaxHealth()),
-            res.getMana(),    player.getMaxMana(),    bar(res.getMana(),    player.getMaxMana()),
-            res.getStamina(), player.getMaxStamina(), bar(res.getStamina(), player.getMaxStamina()),
-            res.getCarryWeight()       / 1000.0,
-            player.getMaxCarryWeight() / 1000.0,
-            bar(res.getCarryWeight(),  player.getMaxCarryWeight()),
-            attrSection
-        );
+        return "%s\n%s\n\n%s\n\n── Attributes ─────────────────────\n%s"
+            .formatted(title, subline, vitals, attrSection);
     }
 
-    /**
-     * Constructs an ascii representation progress track meter utilizing filled and shaded Unicode character blocks.
-     *
-     * @param current the current quantity metric total
-     * @param max     the maximum capacity constraint metric total
-     * @return a 10-character wide string layout containing comparative visual block indicators
-     */
+    private String hpColor(int hp, int max) {
+        double pct = max > 0 ? (double) hp / max : 1.0;
+        if (pct > 0.50) return "#00ff41";
+        if (pct > 0.25) return "#ffd700";
+        return "#ff4444";
+    }
+
     private String bar(int current, int max) {
         int filled = max > 0 ? Math.max(0, Math.min(10, Math.round((float) current / max * 10))) : 0;
         return "█".repeat(filled) + "░".repeat(10 - filled);
     }
 
-    /**
-     * Standardizes a raw token phrase by transforming the initial boundary character to uppercase and the remainder to lowercase.
-     *
-     * @param s the target text string requiring character modification
-     * @return the transformed string line or a fallback dash signature if the target context evaluates as empty
-     */
     private String cap(String s) {
         if (s == null || s.isBlank()) return "—";
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();

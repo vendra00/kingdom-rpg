@@ -73,7 +73,18 @@ public class GameEngine {
     public String processCommand(String playerName, String input) {
         Player player = playerRepository.findByName(playerName)
             .orElseThrow(() -> new IllegalStateException("Player not found — please rejoin."));
-        return commandParser.parse(player, input);
+        String result = commandParser.parse(player, input);
+        return result + "\n" + statsTag(player);
+    }
+
+    private String statsTag(Player player) {
+        var res = player.getResources();
+        return "[stats]%d,%d,%d,%d,%d,%d,%d,%d[/stats]".formatted(
+            res.getHealth(),      player.getMaxHealth(),
+            res.getMana(),        player.getMaxMana(),
+            res.getStamina(),     player.getMaxStamina(),
+            res.getCarryWeight(), player.getMaxCarryWeight()
+        );
     }
 
     /**

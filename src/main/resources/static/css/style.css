@@ -406,7 +406,6 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 10px 0 10px;
     border: 1px solid #1a2a1a;
     box-shadow: 0 0 24px rgba(0,255,65,0.05);
     margin: 8px 0;
@@ -416,6 +415,113 @@ body {
 #login-screen.hidden,
 #char-screen.hidden {
     display: none;
+}
+
+/* Two-column content wrapper (below HUD) */
+#game-content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* ── Stats sidebar ── */
+#stats-panel {
+    flex-shrink: 0;
+    width: 155px;
+    border-right: 1px solid #1a2a1a;
+    background: #060a06;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#sp-identity { margin-bottom: 2px; }
+
+#sp-name {
+    font-size: 0.8rem;
+    color: var(--green);
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#sp-class {
+    font-size: 0.66rem;
+    color: var(--green-dim);
+    margin-top: 3px;
+    line-height: 1.5;
+}
+
+.sp-divider {
+    height: 1px;
+    background: #1a2a1a;
+    margin: 8px 0;
+    flex-shrink: 0;
+}
+
+.sp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.sp-bar-row  { display: flex; flex-direction: column; gap: 3px; }
+
+.sp-bar-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.sp-bar-lbl  { font-size: 0.62rem; color: #3a5a3a; letter-spacing: 1px; }
+
+.sp-bar-val  { font-size: 0.68rem; color: var(--green-dim); }
+
+.sp-bar-max  { font-size: 0.6rem;  color: #2a4a2a; }
+
+.sp-bar-track {
+    height: 3px;
+    background: #0f1f0f;
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.sp-bar-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 0.35s ease;
+    border-radius: 1px;
+}
+
+.sp-mp { background: #00bfff; }
+.sp-st { background: #ffd700; }
+
+.sp-carry {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.sp-carry-val      { font-size: 0.68rem; color: var(--green-dim); }
+.sp-carry-val.warn { color: var(--yellow); }
+
+.sp-loading {
+    font-size: 0.68rem;
+    color: #2a3a2a;
+    letter-spacing: 3px;
+    margin-top: 14px;
+    text-align: center;
+}
+
+/* ── Game main (right of sidebar) ── */
+#game-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* ── Game HUD bar ── */
@@ -566,7 +672,7 @@ body {
     flex: 1;
     overflow-y: auto;
     line-height: 1.65;
-    padding: 0 14px;
+    padding: 8px 14px 0;
 }
 
 .line {

@@ -30,6 +30,7 @@ public class HelpCommand implements Command {
               take [item]       - Pick up an item
               drop [item]       - Drop an item from your inventory
               inventory / inv   - Check your inventory
+              search            - Search for items and secrets in the room
               status            - View your character stats
               spells            - List your cantrips
               cast [cantrip]    - Cast a cantrip

@@ -1,9 +1,12 @@
 'use strict';
 
+import Sounds from './sounds.js';
+
 import { STEPS, RACES, CLASSES, GENDERS, BACKGROUNDS,
          ATTR_DEFS, TOTAL_POINTS, POINT_COSTS, ATTR_MIN, ATTR_MAX,
          CANTRIPS, CANTRIP_SLOTS,
-         COMMAND_COMPLETIONS, DIRECTION_COMPLETIONS, DICE_COMPLETIONS, ABILITY_COMPLETIONS
+         COMMAND_COMPLETIONS, DIRECTION_COMPLETIONS, DICE_COMPLETIONS, ABILITY_COMPLETIONS,
+         TAKE_COMPLETIONS, DROP_COMPLETIONS
        } from './data.js';
 
 const { createApp } = Vue;
@@ -54,6 +57,9 @@ createApp({
             // ── Nerd stats ───────────────────────────────────
             nerdMode: false,
             nerdLog:  [],
+
+            // ── Player stats sidebar ─────────────────────────
+            playerStats: null,
 
             // ── Autocomplete ─────────────────────────────────
             ac: { items: [], idx: -1 },
@@ -108,9 +114,10 @@ createApp({
 
     methods: {
         // ── Title menu ───────────────────────────────────────
-        goToNewGame() { this.startMusic(); this.screen = 'login'; },
+        goToNewGame() { Sounds.click(); this.startMusic(); this.screen = 'login'; },
 
         async goToLoad() {
+            Sounds.click();
             this.startMusic();   // before await — stays inside the user-gesture context
             await this.fetchSaves();
             this.screen = 'load';
@@ -118,6 +125,7 @@ createApp({
 
         async goToContinue() {
             if (!this.saves.length) return;
+            Sounds.confirm();
             this.fadeOutMusic();
             const s = this.saves[0];
             this.playerName = s.name;
@@ -128,7 +136,7 @@ createApp({
             this.connectDirect(s.name);
         },
 
-        goToExit() { window.close(); },
+        goToExit() { Sounds.back(); window.close(); },
 
         async fetchSaves() {
             try {
@@ -141,6 +149,7 @@ createApp({
         },
 
         loadSave(s) {
+            Sounds.confirm();
             this.fadeOutMusic();
             this.playerName = s.name;
             this.gameClass  = s.characterClass || '';
@@ -177,16 +186,18 @@ createApp({
 
         nextStep() {
             if (!this.validateStep()) return;
-            this.isLastStep ? this.startGame() : this.wizardStep++;
+            if (this.isLastStep) { Sounds.confirm(); this.startGame(); }
+            else                 { Sounds.click();   this.wizardStep++; }
         },
-        prevStep() { if (this.wizardStep > 0) this.wizardStep--; },
+        prevStep() { if (this.wizardStep > 0) { Sounds.back(); this.wizardStep--; } },
 
         validateStep() {
             const s = this.currentStep;
-            if (s === 'race'       && !this.char.race)            { this.flash('Choose a race to continue.');       return false; }
-            if (s === 'class'      && !this.char.characterClass)  { this.flash('Choose a class to continue.');      return false; }
-            if (s === 'gender'     && !this.char.gender)           { this.flash('Choose a gender to continue.');     return false; }
-            if (s === 'background' && !this.char.background)       { this.flash('Choose a background to continue.'); return false; }
+            if (s === 'race'       && !this.char.race)            { this.flash('Choose a race to continue.');                           return false; }
+            if (s === 'class'      && !this.char.characterClass)  { this.flash('Choose a class to continue.');                          return false; }
+            if (s === 'gender'     && !this.char.gender)          { this.flash('Choose a gender to continue.');                         return false; }
+            if (s === 'background' && !this.char.background)      { this.flash('Choose a background to continue.');                     return false; }
+            if (s === 'attributes' && this.pointsLeft > 0)        { this.flash(`Spend all ${this.pointsLeft} remaining point${this.pointsLeft > 1 ? 's' : ''} before continuing.`); return false; }
             return true;
         },
 
@@ -196,6 +207,7 @@ createApp({
         },
 
         selectClass(cls) {
+            Sounds.click();
             this.char.characterClass = cls.id;
             this.char.cantrips = [];
         },
@@ -218,15 +230,17 @@ createApp({
             return m > 0 ? 'pos' : m < 0 ? 'neg' : '';
         },
 
-        incrementAttr(key) { if (this.canAfford(key))               this.char.attrs[key]++; },
-        decrementAttr(key) { if (this.char.attrs[key] > ATTR_MIN)   this.char.attrs[key]--; },
+        incrementAttr(key) { if (this.canAfford(key))             { this.char.attrs[key]++; Sounds.attrUp();   } },
+        decrementAttr(key) { if (this.char.attrs[key] > ATTR_MIN) { this.char.attrs[key]--; Sounds.attrDown(); } },
 
         // ── Cantrips ─────────────────────────────────────────
         toggleCantrip(cantrip) {
             const idx = this.char.cantrips.indexOf(cantrip.id);
             if (idx >= 0) {
+                Sounds.back();
                 this.char.cantrips.splice(idx, 1);
             } else if (this.char.cantrips.length < this.cantripSlots) {
+                Sounds.click();
                 this.char.cantrips.push(cantrip.id);
             }
         },
@@ -288,6 +302,10 @@ createApp({
                 pool = COMMAND_COMPLETIONS;
             } else if (['go', 'move'].includes(verb)) {
                 pool = DIRECTION_COMPLETIONS;
+            } else if (['take', 'get', 'pick'].includes(verb)) {
+                pool = TAKE_COMPLETIONS;
+            } else if (['drop'].includes(verb)) {
+                pool = DROP_COMPLETIONS;
             } else if (['cast', 'use'].includes(verb)) {
                 pool = this.cantripCompletions();
             } else if (['attempt', 'try'].includes(verb)) {
@@ -435,13 +453,22 @@ createApp({
                 this.nerdLog.push({ ts, text: m[1].trim() });
             }
 
+            // Extract [stats] block and update sidebar
+            const statsM = text.match(/\[stats\]([^\[]+)\[\/stats\]/);
+            if (statsM) {
+                const [hp, maxHp, mana, maxMana, stamina, maxStamina, carry, maxCarry] =
+                    statsM[1].split(',').map(Number);
+                this.playerStats = { hp, maxHp, mana, maxMana, stamina, maxStamina, carry, maxCarry };
+            }
+
             // Track current room from "=== [room]Name[/room] ===" header lines
             const roomM = text.match(/===\s*\[room\](.*?)\[\/room\]\s*===/);
             if (roomM) this.currentRoom = roomM[1];
 
-            // Strip nerd blocks from the main output text
+            // Strip nerd and stats blocks from the main output text
             const mainText = text
                 .replace(/\n?\[nerd\][\s\S]*?\[\/nerd\]\n?/g, '\n')
+                .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
                 .replace(/^\n+/, '')
                 .trimEnd();
 
@@ -468,6 +495,7 @@ createApp({
             const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return esc
                 .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g,      '')
+                .replace(/\[stats\][^\[]*\[\/stats\]/g,       '')
                 .replace(/\[narrate\](.*?)\[\/narrate\]/g,    '$1')
                 .replace(/\[room\](.*?)\[\/room\]/g,          '<span class="tag-room">$1</span>')
                 .replace(/\[exit\](.*?)\[\/exit\]/g,          '<span class="tag-exit">$1</span>')
@@ -497,10 +525,21 @@ createApp({
             const m = text.match(/\[narrate\]([\s\S]*?)\[\/narrate\]/);
             return m ? m[1] : text
                 .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g, '')
+                .replace(/\[stats\][^\[]*\[\/stats\]/g, '')
                 .replace(/\[c=[^\]]+\]/g, '')
                 .replace(/\[\/c\]/g, '')
                 .replace(/\[\/?(?:room|exit|item|narrate)\]/g, '');
         },
+
+        pct(val, max) {
+            return max > 0 ? Math.max(2, Math.round(val / max * 100)) + '%' : '0%';
+        },
+        hpColor(hp, max) {
+            const p = max > 0 ? hp / max : 1;
+            return p > 0.5 ? '#00ff41' : p > 0.25 ? '#ffd700' : '#ff4444';
+        },
+
+        uiClick() { Sounds.click(); },
 
         // ── Utility ──────────────────────────────────────────
         cap(s) {
