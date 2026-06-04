@@ -68,20 +68,23 @@ public class InventoryCommand implements Command {
 
     private String equipmentStats(Item item) {
         if (item instanceof Weapon w) {
+            String dmg = w.getDamageType() != null
+                ? MarkupTag.color(w.getDamageType().cssColor(), w.getDamageType().label())
+                : "—";
+            String cond = MarkupTag.color(w.getCondition().cssColor(), w.getCondition().label());
             return "\n      Atk: %d–%d  ·  %s  ·  %s  ·  Condition: %s".formatted(
                 w.getEffectiveAttackMin(), w.getEffectiveAttackMax(),
-                w.getWeaponRange().label(),
-                w.getDamageType() != null ? w.getDamageType().label() : "—",
-                w.getCondition().label()
-            );
+                w.getWeaponRange().label(), dmg, cond);
         }
         if (item instanceof Armor a) {
+            String cond = MarkupTag.color(a.getCondition().cssColor(), a.getCondition().label());
             return "\n      AC: %d  ·  %s  ·  Condition: %s".formatted(
-                a.getEffectiveArmorClass(), a.getArmorType(), a.getCondition().label());
+                a.getEffectiveArmorClass(), a.getArmorType(), cond);
         }
         if (item instanceof Shield s) {
+            String cond = MarkupTag.color(s.getCondition().cssColor(), s.getCondition().label());
             return "\n      Defense: +%d  ·  Condition: %s".formatted(
-                s.getEffectiveDefenseBonus(), s.getCondition().label());
+                s.getEffectiveDefenseBonus(), cond);
         }
         return "";
     }

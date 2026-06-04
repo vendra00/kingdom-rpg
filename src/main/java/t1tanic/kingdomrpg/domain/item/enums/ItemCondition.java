@@ -8,22 +8,25 @@ package t1tanic.kingdomrpg.domain.item.enums;
  * @version 1.0
  */
 public enum ItemCondition {
-    PRISTINE("Pristine", 1.00),
-    GOOD    ("Good",     0.90),
-    WORN    ("Worn",     0.75),
-    DAMAGED ("Damaged",  0.50),
-    BROKEN  ("Broken",   0.00);
+    PRISTINE("Pristine", 1.00, "#00ff41"),
+    GOOD    ("Good",     0.90, "#7fff00"),
+    WORN    ("Worn",     0.75, "#ffd700"),
+    DAMAGED ("Damaged",  0.50, "#ff8c00"),
+    BROKEN  ("Broken",   0.00, "#ff3333");
 
     private final String label;
     private final double multiplier;
+    private final String cssColor;
 
-    ItemCondition(String label, double multiplier) {
+    ItemCondition(String label, double multiplier, String cssColor) {
         this.label      = label;
         this.multiplier = multiplier;
+        this.cssColor   = cssColor;
     }
 
     public String label()      { return label; }
     public double multiplier() { return multiplier; }
+    public String cssColor()   { return cssColor; }
 
     /**
      * Derives condition from a durability ratio.

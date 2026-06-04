@@ -424,7 +424,8 @@ createApp({
                 .replace(/\[narrate\](.*?)\[\/narrate\]/g, '$1')
                 .replace(/\[room\](.*?)\[\/room\]/g,        '<span class="tag-room">$1</span>')
                 .replace(/\[exit\](.*?)\[\/exit\]/g,         '<span class="tag-exit">$1</span>')
-                .replace(/\[item\](.*?)\[\/item\]/g,         '<span class="tag-item">$1</span>');
+                .replace(/\[item\](.*?)\[\/item\]/g,         '<span class="tag-item">$1</span>')
+                .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,      '<span style="color:$1">$2</span>');
         },
 
         // ── Narrator ─────────────────────────────────────────
@@ -444,7 +445,10 @@ createApp({
         },
         stripTags(text) {
             const m = text.match(/\[narrate\]([\s\S]*?)\[\/narrate\]/);
-            return m ? m[1] : text.replace(/\[\/?(?:room|exit|item|narrate)\]/g, '');
+            return m ? m[1] : text
+                .replace(/\[c=[^\]]+\]/g, '')
+                .replace(/\[\/c\]/g, '')
+                .replace(/\[\/?(?:room|exit|item|narrate)\]/g, '');
         },
 
         // ── Utility ──────────────────────────────────────────

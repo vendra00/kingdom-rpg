@@ -42,4 +42,16 @@ public enum MarkupTag {
     public String wrap(String text) {
         return "[" + tag + "]" + text + "[/" + tag + "]";
     }
+
+    /**
+     * Wraps text in an inline color tag rendered by the frontend as a CSS {@code style="color"} span.
+     * <p>Example: {@code MarkupTag.color("#ff4500", "Fire")} yields {@code "[c=#ff4500]Fire[/c]"}.</p>
+     *
+     * @param cssColor any valid CSS color value (hex, rgb, named)
+     * @param text     the content to colorize
+     * @return the color-wrapped markup string
+     */
+    public static String color(String cssColor, String text) {
+        return "[c=" + cssColor + "]" + text + "[/c]";
+    }
 }
