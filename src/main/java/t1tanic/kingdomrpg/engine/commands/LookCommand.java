@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.item.Item;
 import t1tanic.kingdomrpg.domain.world.Room;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
 import java.util.ArrayList;

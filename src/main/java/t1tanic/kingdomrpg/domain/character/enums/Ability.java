@@ -1,10 +1,10 @@
-package t1tanic.kingdomrpg.domain.character;
+package t1tanic.kingdomrpg.domain.character.enums;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static t1tanic.kingdomrpg.domain.character.AbilityCategory.*;
+import static t1tanic.kingdomrpg.domain.character.enums.AbilityCategory.*;
 
 /**
  * Enumerates all active skill-check abilities available to characters within the RPG system.

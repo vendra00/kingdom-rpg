@@ -1,10 +1,10 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.character.Ability;
-import t1tanic.kingdomrpg.domain.character.AbilityCategory;
+import t1tanic.kingdomrpg.domain.character.enums.Ability;
+import t1tanic.kingdomrpg.domain.character.enums.AbilityCategory;
 import t1tanic.kingdomrpg.domain.character.Player;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 
 /**
  * Command implementation responsible for displaying the player's active Ability Book.

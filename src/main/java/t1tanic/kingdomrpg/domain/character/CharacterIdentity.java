@@ -19,22 +19,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CharacterIdentity {
-
     /**
      * The fantasy race of the character (e.g., Human, Elf, Dwarf).
      */
     private String race;
-
     /**
      * The professional archetype or occupational class of the character (e.g., Warrior, Mage, Rogue).
      */
     private String characterClass;
-
     /**
      * The gender identity of the character.
      */
     private String gender;
-
     /**
      * The historical origin story or social background of the character (e.g., Noble, Acolyte, Criminal).
      */

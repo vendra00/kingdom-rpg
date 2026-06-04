@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.item.Item;
-import t1tanic.kingdomrpg.domain.item.ItemTag;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
 import java.util.List;

@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 
 /**
  * Represents a specialized quest, story progression, or utility unlock item within the RPG domain.

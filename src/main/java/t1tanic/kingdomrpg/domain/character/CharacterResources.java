@@ -17,25 +17,21 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class CharacterResources {
-
     /**
      * The character's current hit points.
      * Represents life force; reaching zero typically results in death or incapacitation.
      */
     private int health;
-
     /**
      * The character's current magical energy pool.
      * Consumed when casting spells or activating magical abilities.
      */
     private int mana;
-
     /**
      * The character's current physical endurance pool.
      * Consumed by physical activities such as sprinting, dodging, or heavy physical attacks.
      */
     private int stamina;
-
     /**
      * The total weight of all items currently carried by the character.
      * Measured against the maximum carrying capacity to determine encumbrance penalties.

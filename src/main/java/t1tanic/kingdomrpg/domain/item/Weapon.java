@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 
 /**
  * Represents an offensive combat equipment item within the RPG domain.

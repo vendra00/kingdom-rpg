@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain.magic;
+package t1tanic.kingdomrpg.domain.magic.enums;
 
 /**
  * Defines the functional classifications of cantrips and manages their corresponding casting narrative templates.

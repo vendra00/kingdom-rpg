@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import t1tanic.kingdomrpg.domain.character.*;
+import t1tanic.kingdomrpg.domain.character.enums.Attribute;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterBackground;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterRace;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
 import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.CantripRepository;
@@ -17,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static t1tanic.kingdomrpg.domain.character.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.enums.Attribute.*;
 
 /**
  * Core transactional service orchestration engine driving character initialization and command dispatch loops.
@@ -100,7 +103,7 @@ public class GameEngine {
         String backgroundStr = (String) payload.getOrDefault("background",      "noble");
 
         log.info("Creating new player — {}/{} background:{}", raceStr, classStr, backgroundStr);
-        CharacterRace       race = CharacterRace.fromString(raceStr);
+        CharacterRace race = CharacterRace.fromString(raceStr);
         CharacterBackground bg   = CharacterBackground.fromString(backgroundStr);
 
         // Start from point-buy values sent by the client

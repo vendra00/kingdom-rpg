@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain.character;
+package t1tanic.kingdomrpg.domain.character.enums;
 
 /**
  * Groups related specialized skills into broad ability categories and binds them

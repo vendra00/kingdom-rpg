@@ -3,7 +3,7 @@ package t1tanic.kingdomrpg.engine.commands;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 
 import java.util.Comparator;
 import java.util.Set;

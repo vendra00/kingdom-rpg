@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.engine.dice.Dice;
 import t1tanic.kingdomrpg.engine.dice.DiceRoll;
 

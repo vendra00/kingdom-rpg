@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 
 /**
  * Represents a wearable defensive gear item within the RPG domain.

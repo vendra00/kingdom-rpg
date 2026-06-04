@@ -1,9 +1,9 @@
 package t1tanic.kingdomrpg.engine.commands;
 
 import org.springframework.stereotype.Component;
-import t1tanic.kingdomrpg.domain.character.Attribute;
+import t1tanic.kingdomrpg.domain.character.enums.Attribute;
 import t1tanic.kingdomrpg.domain.character.Player;
-import t1tanic.kingdomrpg.engine.MarkupTag;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;

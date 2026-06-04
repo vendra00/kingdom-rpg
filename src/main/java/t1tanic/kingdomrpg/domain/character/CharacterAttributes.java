@@ -4,6 +4,7 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.character.enums.Attribute;
 
 /**
  * Represents the core attributes of a character in the RPG domain.

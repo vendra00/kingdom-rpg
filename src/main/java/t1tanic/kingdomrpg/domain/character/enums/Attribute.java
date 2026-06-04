@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain.character;
+package t1tanic.kingdomrpg.domain.character.enums;
 
 /**
  * Enumerates the six core character attributes used throughout the RPG system.

@@ -12,7 +12,7 @@ import t1tanic.kingdomrpg.domain.world.Room;
 import java.util.HashSet;
 import java.util.Set;
 
-import static t1tanic.kingdomrpg.domain.character.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.enums.Attribute.*;
 
 /**
  * Represents a playable character within the RPG domain.

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
-import t1tanic.kingdomrpg.domain.magic.CantripEffect;
+import t1tanic.kingdomrpg.domain.magic.enums.CantripEffect;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

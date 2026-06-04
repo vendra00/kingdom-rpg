@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.engine;
+package t1tanic.kingdomrpg.engine.enums;
 
 /**
  * Defines semantic custom formatting tags utilized to wrap game text log outputs.

@@ -1,8 +1,8 @@
-package t1tanic.kingdomrpg.domain.character;
+package t1tanic.kingdomrpg.domain.character.enums;
 
 import java.util.Map;
 
-import static t1tanic.kingdomrpg.domain.character.Attribute.*;
+import static t1tanic.kingdomrpg.domain.character.enums.Attribute.*;
 
 /**
  * Defines the playable character races in the RPG system and their respective starting attribute bonuses.

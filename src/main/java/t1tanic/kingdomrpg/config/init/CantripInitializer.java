@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
-import t1tanic.kingdomrpg.domain.magic.CantripEffect;
+import t1tanic.kingdomrpg.domain.magic.enums.CantripEffect;
 import t1tanic.kingdomrpg.repository.CantripRepository;
 
 import java.util.List;
 
-import static t1tanic.kingdomrpg.domain.magic.CantripEffect.*;
+import static t1tanic.kingdomrpg.domain.magic.enums.CantripEffect.*;
 
 @Slf4j
 @Component

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.magic.enums.CantripEffect;
 
 /**
  * Represents a Cantrip (a basic, infinitely castable level-0 spell) within the RPG domain.

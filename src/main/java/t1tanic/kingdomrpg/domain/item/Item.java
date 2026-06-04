@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import t1tanic.kingdomrpg.domain.BaseEntity;
 import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 import t1tanic.kingdomrpg.domain.world.Room;
 
 /**

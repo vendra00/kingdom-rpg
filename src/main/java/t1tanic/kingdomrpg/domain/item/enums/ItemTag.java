@@ -1,4 +1,4 @@
-package t1tanic.kingdomrpg.domain.item;
+package t1tanic.kingdomrpg.domain.item.enums;
 
 /**
  * Defines high-level categorization tags used to organize and filter items within inventories or stores.
