@@ -34,7 +34,18 @@ public class ItemInitializer {
             consumable("Health Potion", "A vial of red liquid. Restores HP.",      rooms.get("hallway"),  200, "Restores 2d4+2 hit points when consumed.", 1),
 
             keyItem("Ancient Scroll", "Covered in faded runes you can't quite read.", rooms.get("library"), 200),
-            keyItem("Rusty Key",      "Heavy iron. What does it open?",               rooms.get("hallway"), 150)
+            keyItem("Rusty Key",      "Heavy iron. What does it open?",               rooms.get("hallway"), 150),
+
+            // Hidden items — require search or perception to discover
+            hide(consumable("Iron Rations", "Stale but still edible. Better than nothing.",
+                            rooms.get("armory"), 400, "Restores 1d4 stamina.", 2),
+                 "a dusty storage crate", 10),
+            hide(keyItem("Cipher Key", "A small brass key etched with strange symbols.",
+                         rooms.get("library"), 50),
+                 "a hollow book", 16),
+            hide(weapon("Bone Knife", "Crude but sharp. Made from something best left unidentified.",
+                        rooms.get("hallway"), 300, 1, 2, WeaponRange.MELEE, DamageType.PIERCING, 60),
+                 null, 19)   // no container — must pass raw perception
         );
         itemRepository.saveAll(items);
         log.info("Seeded {} items", items.size());
@@ -73,6 +84,13 @@ public class ItemInitializer {
         c.setEffect(effect);
         c.setCharges(charges);
         return c;
+    }
+
+    private <T extends t1tanic.kingdomrpg.domain.item.Item> T hide(T item, String container, int dc) {
+        item.setVisible(false);
+        item.setHiddenIn(container);
+        item.setPerceptionDc(dc);
+        return item;
     }
 
     private KeyItem keyItem(String name, String desc, Room room, int grams) {

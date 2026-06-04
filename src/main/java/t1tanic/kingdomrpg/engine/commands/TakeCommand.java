@@ -5,17 +5,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.item.Item;
+import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 import t1tanic.kingdomrpg.repository.PlayerRepository;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Command implementation responsible for allowing players to collect items from the ground
- * of their current room and place them into their inventory.
- * <p>This command verifies that the requested item exists in the location, performs a safety check
- * against the character's structural maximum carry capacity limits, updates entity relationships,
- * and commits the resulting transactional state changes back to the database tier.</p>
+ * Command implementation responsible for collecting items from the floor into the player's inventory.
+ * <p>Only visible items can be picked up. Hidden items must first be revealed via {@link SearchCommand}.
+ * The special argument {@code all} collects every visible item in the room in a single operation.</p>
  *
  * @author t1tanic
  * @version 1.0
@@ -30,37 +31,72 @@ public class TakeCommand implements Command {
 
     /**
      * {@inheritDoc}
-     * <p>Collates sequential arguments to construct a target item query phrase. Searches the
-     * environmental location's ground inventory using case-insensitive partial matching logic,
-     * handling immediate exit scenarios if the query array is empty.</p>
      *
      * @param player the active player character attempting to pick up an item
-     * @param args   the clean argument components containing the textual name or keyword of the item
-     * @return a structured string confirmation detailing the collection result or capacity failure rules
+     * @param args   item name tokens, or the single keyword {@code all}
+     * @return confirmation of what was collected, or a failure reason
      */
     @Override
     public String execute(Player player, String[] args) {
-        if (args.length == 0) return "Take what?";
+        if (args.length == 0) return "Take what?  (or 'take all')";
+
+        if (args.length == 1 && args[0].equals("all")) {
+            return takeAll(player);
+        }
 
         String itemName = String.join(" ", args).toLowerCase();
-        List<Item> roomItems = itemRepository.findByRoomId(player.getCurrentRoom().getId());
+        List<Item> visible = itemRepository.findByRoomIdAndVisible(
+            player.getCurrentRoom().getId(), true);
 
-        return roomItems.stream()
+        return visible.stream()
             .filter(item -> item.getName().toLowerCase().contains(itemName))
             .findFirst()
             .map(item -> pickUp(player, item))
-            .orElse("There's no " + itemName + " here.");
+            .orElse("There's no visible " + itemName + " here.");
+    }
+
+    private String takeAll(Player player) {
+        List<Item> visible = itemRepository.findByRoomIdAndVisible(
+            player.getCurrentRoom().getId(), true);
+        if (visible.isEmpty()) return "There's nothing here to take.";
+
+        List<String> taken   = new ArrayList<>();
+        List<String> skipped = new ArrayList<>();
+
+        for (Item item : visible) {
+            int newCarry = player.getResources().getCarryWeight() + item.getWeightGrams();
+            if (newCarry > player.getMaxCarryWeight()) {
+                skipped.add(item.getName());
+                log.debug("Skipping '{}' — would exceed carry limit", item.getName());
+            } else {
+                item.setRoom(null);
+                item.setPlayer(player);
+                itemRepository.save(item);
+                player.getResources().setCarryWeight(newCarry);
+                taken.add(item.getName());
+            }
+        }
+
+        if (!taken.isEmpty()) playerRepository.save(player);
+
+        StringBuilder sb = new StringBuilder();
+        if (!taken.isEmpty()) {
+            sb.append("You pick up: ").append(
+                taken.stream().map(n -> MarkupTag.ITEM.wrap(n)).collect(Collectors.joining(", "))
+            ).append(".");
+        }
+        if (!skipped.isEmpty()) {
+            sb.append("\nToo heavy to carry: ").append(String.join(", ", skipped)).append(".");
+        }
+        return sb.toString().strip();
     }
 
     /**
-     * Transfers ownership of an item from the environmental floor to the player's direct inventory graph.
-     * <p>Evaluates weight thresholds; if the added item mass breaks structural carrying constraints,
-     * the transaction gets rejected with a warning log and an in-game error prompt. Otherwise, the item's
-     * room relationship is cleared, it is bound to the player instance, and encumbrance values are incremented.</p>
+     * Transfers a single visible item from the room floor into the player's inventory.
      *
-     * @param player the operating player record modifying inventory resources
-     * @param item   the target item instance to collect from the floor
-     * @return a formatted text statement detailing the item acquired and its calculated weight in kilograms
+     * @param player the operating player record
+     * @param item   the target item to collect
+     * @return a formatted confirmation or carry-limit rejection message
      */
     private String pickUp(Player player, Item item) {
         int newCarry = player.getResources().getCarryWeight() + item.getWeightGrams();

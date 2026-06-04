@@ -58,6 +58,24 @@ public abstract class Item extends BaseEntity {
     @JoinColumn(name = "player_id")
     private Player player;
     /**
+     * Whether this item is currently visible to the player in its room.
+     * Hidden items are concealed inside containers or obscured in the environment;
+     * they become visible via {@code search} commands or a successful perception check.
+     */
+    private boolean visible = false;
+    /**
+     * Descriptive name of what conceals this item (e.g., {@code "a wooden chest"}, {@code "a hollow book"}).
+     * {@code null} for free-standing visible items or items hidden without a named container.
+     * When non-null, listed in the room as a visible object the player can search.
+     */
+    private String hiddenIn;
+    /**
+     * Minimum perception roll (d20 + WIS modifier) required to spot this item during a general scan.
+     * A value of {@code 0} means the item reveals itself as soon as its container is directly searched.
+     */
+    private int perceptionDc = 0;
+
+    /**
      * Current durability points remaining. Decreases via {@link #degrade(int)} as the item is used.
      * When it reaches zero the item is {@link ItemCondition#BROKEN} and provides no combat benefit.
      */

@@ -8,15 +8,15 @@ import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Command implementation responsible for auditing and rendering the player's immediate environmental surroundings.
- * <p>This command queries the structural layout data of the character's current {@link Room}, parses available
- * geographic direction pathways, checks for items dropped on the floor using the {@link ItemRepository}, and formats
- * a cohesive, marked-up scene narrative block for the user interface console.</p>
+ * <p>Shows only visible items. Named containers (from hidden items' {@code hiddenIn} field) are listed as
+ * interactive environment objects, hinting that they can be investigated via {@code search}.</p>
  *
  * @author t1tanic
  * @version 1.0
@@ -29,36 +29,32 @@ public class LookCommand implements Command {
 
     /**
      * {@inheritDoc}
-     * <p>Compiles localized spatial structural metadata, parsing valid directional doorway indices and appending
-     * item identifiers to construct an integrated visual field snapshot of the player's location.</p>
      *
      * @param player the active player character observing their surroundings
      * @param args   trailing command arguments (unused by this command block)
-     * @return a structured, multi-line string capturing environmental titles, story descriptions, exits, and visible items
+     * @return a structured, multi-line string capturing exits, visible items, and container hints
      */
     @Override
     public String execute(Player player, String[] args) {
         Room room = player.getCurrentRoom();
         StringBuilder sb = new StringBuilder();
         sb.append("=== ").append(MarkupTag.ROOM.wrap(room.getName())).append(" ===\n");
-        sb.append(MarkupTag.NARRATE.wrap(room.getDescription())).append("\n\n");
+        sb.append(MarkupTag.NARRATE.wrap(room.getDescription()));
 
-        List<String> exits = new ArrayList<>();
-        if (room.getNorthId() != null) exits.add(MarkupTag.EXIT.wrap("north"));
-        if (room.getSouthId() != null) exits.add(MarkupTag.EXIT.wrap("south"));
-        if (room.getEastId()  != null) exits.add(MarkupTag.EXIT.wrap("east"));
-        if (room.getWestId()  != null) exits.add(MarkupTag.EXIT.wrap("west"));
-        sb.append("Exits: ").append(exits.isEmpty() ? "none" : String.join(", ", exits)).append("\n");
-
-        List<Item> items = itemRepository.findByRoomId(room.getId());
-        if (!items.isEmpty()) {
-            sb.append("Items (use 'take <name>'): ").append(
-                items.stream()
-                    .map(item -> MarkupTag.ITEM.wrap(item.getName()))
+        // Hint at containers that hold hidden items, without revealing contents
+        List<Item> hidden = itemRepository.findByRoomIdAndVisible(room.getId(), false);
+        Set<String> containers = hidden.stream()
+            .map(Item::getHiddenIn)
+            .filter(h -> h != null && !h.isBlank())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        if (!containers.isEmpty()) {
+            sb.append("\n\nYou notice: ").append(
+                containers.stream()
+                    .map(c -> MarkupTag.EXIT.wrap(c))
                     .collect(Collectors.joining(", "))
-            );
+            ).append("  (search <name> to investigate)");
         }
 
-        return sb.toString();
+        return sb.toString().stripTrailing();
     }
 }

@@ -22,6 +22,14 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      */
     List<Item> findByRoomId(Long roomId);
     /**
+     * Retrieves items in a room filtered by their current visibility state.
+     *
+     * @param roomId  the unique database identifier of the target room
+     * @param visible {@code true} to return only visible items; {@code false} for hidden ones
+     * @return a {@link List} of matching {@link Item} records
+     */
+    List<Item> findByRoomIdAndVisible(Long roomId, boolean visible);
+    /**
      * Retrieves all items currently held inside a specific character's inventory container.
      *
      * @param playerId the unique database identifier of the target player character holding the items

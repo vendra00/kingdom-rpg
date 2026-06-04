@@ -25,7 +25,11 @@ public enum MarkupTag {
     /**
      * Used for atmospheric narrative flavor, sensory logs, or overarching story exposition blocks.
      */
-    NARRATE("narrate");
+    NARRATE("narrate"),
+    /**
+     * Used for mechanical game data (dice rolls, DC results, modifiers) routed to the nerd stats panel.
+     */
+    NERD("nerd");
 
     private final String tag;
 

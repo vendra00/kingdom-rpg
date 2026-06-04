@@ -77,14 +77,6 @@ public enum Ability {
            "You strain your ears but hear nothing useful."),
 
     /**
-     * Methodically check an area for hidden objects.
-     */
-    SEARCH("search", "Search", PERCEPTION, 13,
-           "Methodically check an area for hidden objects.",
-           "You work systematically through the area.  Your diligence is rewarded.",
-           "You come up empty.  Either there's nothing here, or it's very well hidden."),
-
-    /**
      * Read the true intentions behind someone's words.
      */
     SENSE_MOTIVE("sense", "Sense Motive", PERCEPTION, 14,

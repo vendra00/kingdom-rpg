@@ -14,18 +14,13 @@
         <source src="/audio/theme.ogg" type="audio/ogg">
     </audio>
 
-    <header id="header">
+    <header id="header" v-if="screen !== 'game'">
         <span id="title">&#9876; KINGDOM RPG</span>
         <div id="header-right">
-            <button v-if="screen !== 'game'" id="music-btn"
+            <button id="music-btn"
                     :class="{ muted: musicMuted }"
                     @click="toggleMusic"
                     title="Toggle music">&#9835; Music</button>
-            <button v-if="screen === 'game'" id="narrator-btn"
-                    :class="{ active: narratorEnabled }"
-                    @click="toggleNarrator"
-                    title="Toggle narrator">&#128266; Narrator</button>
-            <span id="player-info" v-if="screen === 'game'">{{ playerName }}</span>
         </div>
     </header>
 
@@ -285,6 +280,20 @@
 
     <!-- ── Game ─────────────────────────────────────────────── -->
     <div id="game-screen" v-else-if="screen === 'game'">
+
+        <!-- HUD bar -->
+        <div id="game-hud">
+            <span id="hud-brand">&#9876; KINGDOM RPG</span>
+            <span class="hud-sep">│</span>
+            <span id="hud-char">{{ playerName }}<template v-if="gameRace || gameClass"> · {{ cap(gameRace) }} {{ cap(gameClass) }}</template></span>
+            <span class="hud-sep" v-if="currentRoom">│</span>
+            <span id="hud-room" v-if="currentRoom">&#9654; {{ currentRoom }}</span>
+            <div id="hud-right">
+                <button id="music-btn" :class="{ muted: musicMuted }" @click="toggleMusic" title="Toggle music">&#9835;</button>
+            </div>
+        </div>
+
+        <!-- Main output -->
         <div id="output" ref="outputEl">
             <div v-for="(msg, i) in messages" :key="i"
                  class="line" :class="msg.type">
@@ -293,6 +302,20 @@
                         @click="speak(msg.text)" title="Read aloud">&#128266;</button>
             </div>
         </div>
+
+        <!-- Nerd stats panel -->
+        <div id="nerd-panel" v-show="nerdMode">
+            <div id="nerd-header">&#9670; NERD STATS</div>
+            <div id="nerd-output" ref="nerdOutputEl">
+                <div v-if="!nerdLog.length" class="nerd-empty">No dice rolls yet.</div>
+                <div v-for="(entry, i) in nerdLog" :key="i" class="nerd-line">
+                    <span class="nerd-ts">{{ entry.ts }}</span>
+                    <span class="nerd-text" v-html="parseMarkup(entry.text)"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input row -->
         <div id="input-row">
             <!-- Autocomplete dropdown (floats above the input row) -->
             <div id="ac-list" v-if="ac.items.length" @mousedown.prevent>
@@ -310,6 +333,10 @@
                    @keydown="handleKey"
                    @input="updateAc"
                    @blur="closeAc">
+            <div id="game-btns">
+                <button id="nerd-btn" :class="{ active: nerdMode }" @click="toggleNerdMode" title="Toggle nerd stats">&#9651; Nerd</button>
+                <button id="narrator-btn" :class="{ active: narratorEnabled }" @click="toggleNarrator" title="Toggle narrator">&#128266; Voice</button>
+            </div>
         </div>
     </div>
 

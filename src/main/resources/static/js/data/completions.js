@@ -16,6 +16,7 @@ export const COMMAND_COMPLETIONS = [
     { value: 'roll',       hint: 'Roll dice  (d20, 2d6, 1d8+3 …)' },
     { value: 'abilities',  hint: 'Open your ability book' },
     { value: 'attempt',    hint: 'Attempt an ability check' },
+    { value: 'search',     hint: 'Search the room or a specific container' },
     { value: 'help',       hint: 'Show all available commands' },
 ];
 
@@ -49,7 +50,6 @@ export const ABILITY_COMPLETIONS = [
     // Perception
     { value: 'survey',      hint: 'Perception · Scan for unusual details' },
     { value: 'listen',      hint: 'Perception · Focus hearing for nearby sounds' },
-    { value: 'search',      hint: 'Perception · Methodically check for hidden objects' },
     { value: 'sense',       hint: 'Perception · Read intentions behind someone\'s words' },
     // Athletics
     { value: 'jump',        hint: 'Athletics  · Leap across a gap or obstacle' },

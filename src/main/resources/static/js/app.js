@@ -46,6 +46,15 @@ createApp({
             cmdHistory:  [],
             historyIdx:  -1,
 
+            // ── HUD ─────────────────────────────────────────
+            gameClass:   '',
+            gameRace:    '',
+            currentRoom: '',
+
+            // ── Nerd stats ───────────────────────────────────
+            nerdMode: false,
+            nerdLog:  [],
+
             // ── Autocomplete ─────────────────────────────────
             ac: { items: [], idx: -1 },
 
@@ -112,6 +121,8 @@ createApp({
             this.fadeOutMusic();
             const s = this.saves[0];
             this.playerName = s.name;
+            this.gameClass  = s.characterClass || '';
+            this.gameRace   = s.race || '';
             this.screen = 'game';
             await this.$nextTick();
             this.connectDirect(s.name);
@@ -132,6 +143,8 @@ createApp({
         loadSave(s) {
             this.fadeOutMusic();
             this.playerName = s.name;
+            this.gameClass  = s.characterClass || '';
+            this.gameRace   = s.race || '';
             this.screen = 'game';
             this.$nextTick(() => this.connectDirect(s.name));
         },
@@ -365,6 +378,8 @@ createApp({
         // ── Game ─────────────────────────────────────────────
         startGame() {
             this.fadeOutMusic();
+            this.gameClass = this.char.characterClass || '';
+            this.gameRace  = this.char.race || '';
             this.screen = 'game';
             this.$nextTick(() => this.connect());
         },
@@ -409,24 +424,59 @@ createApp({
         },
 
         addMessage(text, type) {
-            const speakable = (type === 'output' || type === 'system') && !!text.trim();
-            this.messages.push({ text, type: type || 'output', speakable });
+            // Route [nerd]...[/nerd] blocks to the nerd log
+            const nerdRe = /\[nerd\]([\s\S]*?)\[\/nerd\]/g;
+            let m;
+            let hasNerd = false;
+            while ((m = nerdRe.exec(text)) !== null) {
+                hasNerd = true;
+                const now = new Date();
+                const ts  = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+                this.nerdLog.push({ ts, text: m[1].trim() });
+            }
+
+            // Track current room from "=== [room]Name[/room] ===" header lines
+            const roomM = text.match(/===\s*\[room\](.*?)\[\/room\]\s*===/);
+            if (roomM) this.currentRoom = roomM[1];
+
+            // Strip nerd blocks from the main output text
+            const mainText = text
+                .replace(/\n?\[nerd\][\s\S]*?\[\/nerd\]\n?/g, '\n')
+                .replace(/^\n+/, '')
+                .trimEnd();
+
+            if (!mainText.trim()) {
+                if (hasNerd) this.$nextTick(() => {
+                    const ne = this.$refs.nerdOutputEl;
+                    if (ne) ne.scrollTop = ne.scrollHeight;
+                });
+                return;
+            }
+
+            const speakable = (type === 'output' || type === 'system') && !!mainText.trim();
+            this.messages.push({ text: mainText, type: type || 'output', speakable });
             this.$nextTick(() => {
                 const el = this.$refs.outputEl;
                 if (el) el.scrollTop = el.scrollHeight;
-                if (speakable && this.narratorEnabled) this.speak(text);
+                const ne = this.$refs.nerdOutputEl;
+                if (ne) ne.scrollTop = ne.scrollHeight;
+                if (speakable && this.narratorEnabled) this.speak(mainText);
             });
         },
 
         parseMarkup(text) {
             const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return esc
-                .replace(/\[narrate\](.*?)\[\/narrate\]/g, '$1')
-                .replace(/\[room\](.*?)\[\/room\]/g,        '<span class="tag-room">$1</span>')
-                .replace(/\[exit\](.*?)\[\/exit\]/g,         '<span class="tag-exit">$1</span>')
-                .replace(/\[item\](.*?)\[\/item\]/g,         '<span class="tag-item">$1</span>')
-                .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,      '<span style="color:$1">$2</span>');
+                .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g,      '')
+                .replace(/\[narrate\](.*?)\[\/narrate\]/g,    '$1')
+                .replace(/\[room\](.*?)\[\/room\]/g,          '<span class="tag-room">$1</span>')
+                .replace(/\[exit\](.*?)\[\/exit\]/g,          '<span class="tag-exit">$1</span>')
+                .replace(/\[item\](.*?)\[\/item\]/g,          '<span class="tag-item">$1</span>')
+                .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,       '<span style="color:$1">$2</span>');
         },
+
+        // ── Nerd mode ────────────────────────────────────────
+        toggleNerdMode() { this.nerdMode = !this.nerdMode; },
 
         // ── Narrator ─────────────────────────────────────────
         toggleNarrator() {
@@ -446,6 +496,7 @@ createApp({
         stripTags(text) {
             const m = text.match(/\[narrate\]([\s\S]*?)\[\/narrate\]/);
             return m ? m[1] : text
+                .replace(/\[nerd\][\s\S]*?\[\/nerd\]/g, '')
                 .replace(/\[c=[^\]]+\]/g, '')
                 .replace(/\[\/c\]/g, '')
                 .replace(/\[\/?(?:room|exit|item|narrate)\]/g, '');

@@ -93,7 +93,8 @@ public class AttemptCommand implements Command {
         }
 
         return "Attempting " + MarkupTag.ROOM.wrap(ability.displayName()) + "...\n\n"
-             + rollLine + "  →  " + verdict + "\n"
+             + MarkupTag.NERD.wrap(rollLine) + "\n"
+             + verdict + "\n"
              + narrative;
     }
 }
