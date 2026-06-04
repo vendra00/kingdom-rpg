@@ -29,6 +29,15 @@ public class Shield extends Item {
      */
     private int defenseBonus;
     /**
+     * Returns the condition-scaled defense bonus value.
+     * Returns {@code 0} if the item is broken.
+     */
+    public int getEffectiveDefenseBonus() {
+        if (isBroken()) return 0;
+        return Math.max(0, (int) Math.round(defenseBonus * conditionMultiplier()));
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @return the definitive classification tag {@link ItemTag#EQUIPMENT}

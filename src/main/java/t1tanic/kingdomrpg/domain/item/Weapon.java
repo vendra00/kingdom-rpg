@@ -2,17 +2,20 @@ package t1tanic.kingdomrpg.domain.item;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.item.enums.DamageType;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
+import t1tanic.kingdomrpg.domain.item.enums.WeaponRange;
 
 /**
  * Represents an offensive combat equipment item within the RPG domain.
- * <p>Weapon items hold the baseline parameters required to resolve combat attack vectors,
- * housing formulas for raw damage generation and damage classifications. This class extends
- * {@link Item} and integrates into the shared joined inheritance hierarchy using a specialized
- * discriminator value strategy.</p>
+ * <p>Weapons define explicit minimum and maximum base attack values along with their engagement
+ * range and damage classification. Effective attack bounds degrade proportionally with item
+ * condition, reaching zero when the item is {@link t1tanic.kingdomrpg.domain.item.enums.ItemCondition#BROKEN}.</p>
  *
  * @author t1tanic
  * @version 1.0
@@ -24,16 +27,46 @@ import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 @NoArgsConstructor
 public class Weapon extends Item {
     /**
-     * The dice notation calculation formula dictating the base damage roll calculation.
-     * <p>Example: {@code "1d6"} for a shortsword, {@code "2d6"} for a greatsword.</p>
+     * The minimum base damage dealt by this weapon before condition scaling is applied.
+     * <p>Example: {@code 2} for a short sword.</p>
      */
-    private String damageDice;
+    private int attackMin;
     /**
-     * The structural type classification of the damage dealt by the weapon.
-     * Interacts with creature resistances, immunities, or vulnerabilities.
-     * <p>Example: {@code "slashing"}, {@code "piercing"}, {@code "bludgeoning"}.</p>
+     * The maximum base damage dealt by this weapon before condition scaling is applied.
+     * <p>Example: {@code 5} for a short sword.</p>
      */
-    private String damageType;
+    private int attackMax;
+    /**
+     * The elemental or physical classification of the damage dealt by the weapon.
+     * Interacts with creature resistances, immunities, or vulnerabilities.
+     */
+    @Enumerated(EnumType.STRING)
+    private DamageType damageType;
+    /**
+     * The effective engagement reach category of this weapon.
+     * Defaults to {@link WeaponRange#MELEE} for hand-to-hand weapons.
+     */
+    @Enumerated(EnumType.STRING)
+    private WeaponRange weaponRange = WeaponRange.MELEE;
+
+    /**
+     * Returns the condition-scaled minimum attack value.
+     * Returns {@code 0} if the item is broken, otherwise at least {@code 1}.
+     */
+    public int getEffectiveAttackMin() {
+        if (isBroken()) return 0;
+        return Math.max(1, (int) Math.round(attackMin * conditionMultiplier()));
+    }
+
+    /**
+     * Returns the condition-scaled maximum attack value.
+     * Returns {@code 0} if the item is broken, otherwise at least {@code 1}.
+     */
+    public int getEffectiveAttackMax() {
+        if (isBroken()) return 0;
+        return Math.max(1, (int) Math.round(attackMax * conditionMultiplier()));
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -43,6 +76,7 @@ public class Weapon extends Item {
     public ItemTag getItemTag() {
         return ItemTag.EQUIPMENT;
     }
+
     /**
      * {@inheritDoc}
      *

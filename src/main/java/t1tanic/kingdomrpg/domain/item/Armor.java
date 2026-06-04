@@ -34,6 +34,15 @@ public class Armor extends Item {
      */
     private String armorType;
     /**
+     * Returns the condition-scaled armor class value.
+     * Returns {@code 0} if the item is broken, otherwise at least {@code 1}.
+     */
+    public int getEffectiveArmorClass() {
+        if (isBroken()) return 0;
+        return Math.max(1, (int) Math.round(armorClass * conditionMultiplier()));
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @return the definitive classification tag {@link ItemTag#EQUIPMENT}

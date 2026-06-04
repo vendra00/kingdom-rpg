@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import t1tanic.kingdomrpg.domain.BaseEntity;
 import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.item.enums.ItemCondition;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 import t1tanic.kingdomrpg.domain.world.Room;
 
@@ -56,6 +57,48 @@ public abstract class Item extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "player_id")
     private Player player;
+    /**
+     * Current durability points remaining. Decreases via {@link #degrade(int)} as the item is used.
+     * When it reaches zero the item is {@link ItemCondition#BROKEN} and provides no combat benefit.
+     */
+    private int durability    = 100;
+    /**
+     * Maximum possible durability for this item instance.
+     * Acts as the denominator for condition percentage calculations.
+     */
+    private int maxDurability = 100;
+
+    /**
+     * Reduces durability by the given amount, clamping at zero.
+     *
+     * @param amount points of wear to apply
+     */
+    public void degrade(int amount) {
+        durability = Math.max(0, durability - amount);
+    }
+
+    /**
+     * Returns the current wear state derived from the durability ratio.
+     *
+     * @return the {@link ItemCondition} matching the current durability percentage
+     */
+    public ItemCondition getCondition() {
+        return ItemCondition.of(durability, maxDurability);
+    }
+
+    /** @return {@code true} when durability has reached zero */
+    public boolean isBroken() {
+        return durability <= 0;
+    }
+
+    /**
+     * Returns the performance scaling factor for the current condition (0.0 – 1.0).
+     * Subclasses multiply their base stats by this value to compute effective stats.
+     */
+    public double conditionMultiplier() {
+        return getCondition().multiplier();
+    }
+
     /**
      * Retrieves the foundational classification category structural index tag for this item type.
      *

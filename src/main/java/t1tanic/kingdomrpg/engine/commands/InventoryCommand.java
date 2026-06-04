@@ -3,7 +3,10 @@ package t1tanic.kingdomrpg.engine.commands;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.item.Armor;
 import t1tanic.kingdomrpg.domain.item.Item;
+import t1tanic.kingdomrpg.domain.item.Shield;
+import t1tanic.kingdomrpg.domain.item.Weapon;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.ItemRepository;
@@ -16,7 +19,7 @@ import java.util.stream.Collectors;
  * Command implementation responsible for auditing and listing a player character's inventory content.
  * <p>This command queries active item assets bound to the player ID, segments them into categories based on
  * their structural {@link ItemTag}, calculates metric weights into fractional kilograms, and renders a
- * marked-up terminal display sheet summarizing descriptions and gear types.</p>
+ * marked-up terminal display sheet summarizing descriptions, gear stats, and item condition.</p>
  *
  * @author t1tanic
  * @version 1.0
@@ -29,12 +32,12 @@ public class InventoryCommand implements Command {
 
     /**
      * {@inheritDoc}
-     * <p>Groups item entities by category and processes each cluster into structural display lines. Special
-     * item sub-labels (e.g., specific equipment types) are extracted dynamically and styled with independent markup tags.</p>
+     * <p>Groups item entities by category and processes each cluster into structural display lines. Equipment
+     * items additionally render condition-scaled combat statistics and current wear state.</p>
      *
      * @param player the active player character querying their carrying storage
      * @param args   trailing command arguments (unused by this command block)
-     * @return a structured, marked-up string breakdown detailing item weights, descriptions, and functional types
+     * @return a structured, marked-up string breakdown detailing item weights, descriptions, stats, and condition
      */
     @Override
     public String execute(Player player, String[] args) {
@@ -57,8 +60,29 @@ public class InventoryCommand implements Command {
                     : "";
                 sb.append("\n    - [item]%s[/item]%s (%.2f kg): %s".formatted(
                     item.getName(), typeLabel, item.getWeightGrams() / 1000.0, item.getDescription()));
+                sb.append(equipmentStats(item));
             }
         }
         return sb.toString();
+    }
+
+    private String equipmentStats(Item item) {
+        if (item instanceof Weapon w) {
+            return "\n      Atk: %d–%d  ·  %s  ·  %s  ·  Condition: %s".formatted(
+                w.getEffectiveAttackMin(), w.getEffectiveAttackMax(),
+                w.getWeaponRange().label(),
+                w.getDamageType() != null ? w.getDamageType().label() : "—",
+                w.getCondition().label()
+            );
+        }
+        if (item instanceof Armor a) {
+            return "\n      AC: %d  ·  %s  ·  Condition: %s".formatted(
+                a.getEffectiveArmorClass(), a.getArmorType(), a.getCondition().label());
+        }
+        if (item instanceof Shield s) {
+            return "\n      Defense: +%d  ·  Condition: %s".formatted(
+                s.getEffectiveDefenseBonus(), s.getCondition().label());
+        }
+        return "";
     }
 }
