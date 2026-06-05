@@ -37,8 +37,8 @@ public class PlayerController {
         return playerRepository.findAllByOrderByUpdatedAtDesc().stream()
             .map(p -> new PlayerSummaryDto(
                 p.getName(),
-                p.getIdentity() != null ? p.getIdentity().getRace()           : null,
-                p.getIdentity() != null ? p.getIdentity().getCharacterClass()  : null,
+                p.getIdentity() != null ? p.getIdentity().getRace().displayName() : null,
+                p.getIdentity() != null ? p.getIdentity().getCharacterClass().displayName() : null,
                 p.getUpdatedAt() != null
                     ? p.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                     : null

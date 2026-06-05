@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.NpcTrust;
 import t1tanic.kingdomrpg.domain.character.Player;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterBackground;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterRace;
 import t1tanic.kingdomrpg.repository.NpcTrustRepository;
 
 /**
@@ -69,28 +71,27 @@ public class NpcTrustService {
 
         if (player.getIdentity() == null) return Math.max(0, Math.min(100, trust));
 
-        String race = player.getIdentity().getRace();
+        CharacterRace race = player.getIdentity().getRace();
         if (race != null) {
-            trust += switch (race.toLowerCase()) {
-                case "human"    ->  5;  // common, unsuspicious
-                case "dwarf"    ->  3;  // practical, respected
-                case "halfling" ->  2;
-                case "elf"      -> -3;  // perceived as aloof
-                case "orc"      -> -8;  // instils wariness
-                default         ->  0;
+            trust += switch (race) {
+                case HUMAN    ->  5;  // common, unsuspicious
+                case DWARF    ->  3;  // practical, respected
+                case HALFLING ->  2;
+                case ELF      -> -3;  // perceived as aloof
+                case HALFORC  -> -8;  // instils wariness
+                default       ->  0;
             };
         }
 
-        String background = player.getIdentity().getBackground();
+        CharacterBackground background = player.getIdentity().getBackground();
         if (background != null) {
-            trust += switch (background.toLowerCase()) {
-                case "noble"    -> 10;  // status commands respect
-                case "soldier"  ->  8;  // martial discipline is understood
-                case "sage"     ->  6;  // scholars appreciate fellow learners
-                case "acolyte"  ->  4;
-                case "criminal",
-                     "outlaw"   -> -10; // untrustworthy reputation
-                default         ->  0;
+            trust += switch (background) {
+                case NOBLE    -> 10;  // status commands respect
+                case SOLDIER  ->  8;  // martial discipline is understood
+                case SCHOLAR  ->  6;  // scholars appreciate fellow learners
+                case ACOLYTE  ->  4;
+                case CRIMINAL -> -10; // untrustworthy reputation
+                default       ->  0;
             };
         }
 

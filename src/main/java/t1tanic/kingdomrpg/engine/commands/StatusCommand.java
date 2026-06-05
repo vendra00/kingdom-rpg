@@ -39,8 +39,8 @@ public class StatusCommand implements Command {
         var attrs = player.getAttributes();
         var res   = player.getResources();
 
-        String title   = MarkupTag.ROOM.wrap(player.getName() + "  ·  " + cap(id.getRace()) + " " + cap(id.getCharacterClass()));
-        String subline = "Background: " + cap(id.getBackground()) + "  ·  " + player.getCurrentRoom().getName() + "  ·  " + cap(id.getGender());
+        String title   = MarkupTag.ROOM.wrap(player.getName() + "  ·  " + id.getRace().displayName() + " " + id.getCharacterClass().displayName());
+        String subline = "Background: " + id.getBackground().displayName() + "  ·  " + player.getCurrentRoom().getName() + "  ·  " + cap(id.getGender());
 
         String hpCol  = hpColor(res.getHealth(),  player.getMaxHealth());
         String vitals =

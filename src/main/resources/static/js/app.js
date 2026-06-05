@@ -6,8 +6,10 @@ import { STEPS, RACES, CLASSES, GENDERS, BACKGROUNDS,
          ATTR_DEFS, TOTAL_POINTS, POINT_COSTS, ATTR_MIN, ATTR_MAX,
          CANTRIPS, CANTRIP_SLOTS,
          COMMAND_COMPLETIONS, DIRECTION_COMPLETIONS, DICE_COMPLETIONS, ABILITY_COMPLETIONS,
-         TAKE_COMPLETIONS, DROP_COMPLETIONS, UNEQUIP_COMPLETIONS
+         TAKE_COMPLETIONS, DROP_COMPLETIONS, UNEQUIP_COMPLETIONS, TALK_INTENT_COMPLETIONS
        } from './data.js';
+
+const TALK_INTENTS = new Set(TALK_INTENT_COMPLETIONS.map(i => i.value));
 
 const { createApp } = Vue;
 
@@ -25,7 +27,6 @@ const VERB_TYPES = {
     drop:'target',
     search:'target', examine:'target', inspect:'target',
     equip:'target', wear:'target',
-    persuade:'target', charm:'target', flatter:'target',
     talk:'talk', speak:'talk', greet:'talk',
     roll:'dice',
     cast:'ability', use:'ability',
@@ -84,8 +85,10 @@ createApp({
             playerStats: null,
 
             // ── Autocomplete ─────────────────────────────────
-            ac:       { items: [], idx: -1 },
-            roomNpcs: [],   // visible NPC names in current room, updated from [npc] tags
+            ac:             { items: [], idx: -1 },
+            roomNpcs:       [],   // visible NPC names in current room, updated from [npc] tags
+            roomItems:      [],   // visible item names in current room, updated from [item] tags
+            inventoryItems: [],   // items in player's inventory, updated from [invitem] tags
 
             // ── Music ───────────────────────────────────────
             musicMuted: false,
@@ -337,11 +340,17 @@ createApp({
             } else if (['go', 'move'].includes(verb)) {
                 pool = DIRECTION_COMPLETIONS;
             } else if (['take', 'get', 'pick'].includes(verb)) {
-                pool = TAKE_COMPLETIONS;
+                pool = [
+                    ...TAKE_COMPLETIONS,
+                    ...this.roomItems.map(n => ({ value: n.toLowerCase(), hint: 'Pick up this item' })),
+                ];
             } else if (['drop'].includes(verb)) {
-                pool = DROP_COMPLETIONS;
+                pool = [
+                    ...DROP_COMPLETIONS,
+                    ...this.inventoryItems.map(n => ({ value: n.toLowerCase(), hint: 'Drop this item' })),
+                ];
             } else if (['equip', 'wear'].includes(verb)) {
-                pool = [];
+                pool = this.inventoryItems.map(n => ({ value: n.toLowerCase(), hint: 'Equip this item' }));
             } else if (['unequip', 'remove'].includes(verb)) {
                 pool = UNEQUIP_COMPLETIONS;
             } else if (['cast', 'use'].includes(verb)) {
@@ -350,11 +359,41 @@ createApp({
                 pool = ABILITY_COMPLETIONS;
             } else if (verb === 'roll') {
                 pool = DICE_COMPLETIONS;
-            } else if (['talk', 'speak', 'greet', 'persuade', 'charm', 'flatter'].includes(verb)) {
-                // Match against all words typed after the verb (no trailing space — trimEnd already removed it)
-                const afterVerb = words.slice(1).join(' ').toLowerCase();
+            } else if (['talk', 'speak', 'greet'].includes(verb)) {
+                const afterVerb = words.slice(1); // words after verb (trimEnd already applied)
+
+                // "First arg complete" = trailing space OR there are 2+ words after verb
+                const firstArgRaw  = afterVerb[0]?.toLowerCase() || '';
+                const firstArgDone = endsWithSpace ? firstArgRaw : (afterVerb.length > 1 ? firstArgRaw : null);
+                const intentWord   = firstArgDone !== null && TALK_INTENTS.has(firstArgDone) ? firstArgDone : null;
+
+                if (intentWord) {
+                    // Stage 2 — NPC completions
+                    const npcWords   = afterVerb.slice(1);
+                    const npcPartial = npcWords.join(' ').toLowerCase();
+                    // Exact NPC match with trailing space → ready for message, close AC
+                    if (endsWithSpace && this.roomNpcs.some(n => n.toLowerCase() === npcPartial)) {
+                        this.ac.items = []; this.ac.idx = -1; return;
+                    }
+                    this.ac.items = this.roomNpcs
+                        .filter(n => n.toLowerCase().startsWith(npcPartial))
+                        .map(n => ({ value: intentWord + ' ' + n.toLowerCase(), hint: 'Speak with this character', npcCompletion: true }))
+                        .slice(0, 8);
+                    this.ac.idx = -1;
+                    return;
+                }
+
+                // Stage 1 — intent completions (filter by partial or fall back to NPC if no intent matches)
+                const intentMatches = TALK_INTENT_COMPLETIONS.filter(i => i.value.startsWith(firstArgRaw));
+                if (intentMatches.length > 0 || firstArgRaw === '') {
+                    this.ac.items = intentMatches.map(i => ({ ...i, intentCompletion: true })).slice(0, 8);
+                    this.ac.idx = -1;
+                    return;
+                }
+                // Partial doesn't match any intent — fall back to NPC completions (backward compat)
+                const npcFallback = afterVerb.join(' ').toLowerCase();
                 this.ac.items = this.roomNpcs
-                    .filter(n => n.toLowerCase().startsWith(afterVerb))
+                    .filter(n => n.toLowerCase().startsWith(npcFallback))
                     .map(n => ({ value: n.toLowerCase(), hint: 'Speak with this character', npcCompletion: true }))
                     .slice(0, 8);
                 this.ac.idx = -1;
@@ -381,12 +420,20 @@ createApp({
             const words         = text.trimEnd().split(/\s+/);
             const isFirst       = words.length === 1 && !endsWithSpace;
 
-            // NPC completions replace everything after the verb, then add a trailing
-            // space for talk (ready to type a message) but not for persuade
+            // Intent completion selected: append intent, then trigger NPC stage
+            if (item.intentCompletion) {
+                const verb = words[0].toLowerCase();
+                this.commandText = verb + ' ' + item.value + ' ';
+                this.ac.idx = -1;
+                this.updateAc();
+                this.$nextTick(() => this.$refs.commandInput?.focus());
+                return;
+            }
+
+            // NPC completion replaces everything after the verb (value may include "intent npcname")
             if (item.npcCompletion) {
                 const verb = words[0].toLowerCase();
-                const needsMsg = ['talk', 'speak', 'greet'].includes(verb);
-                this.commandText = verb + ' ' + item.value + (needsMsg ? ' ' : '');
+                this.commandText = verb + ' ' + item.value + ' ';
                 this.ac.items = [];
                 this.ac.idx   = -1;
                 this.$nextTick(() => this.$refs.commandInput?.focus());
@@ -492,6 +539,19 @@ createApp({
             this.cmdHistory.unshift(text);
             this.addMessage('> ' + text, 'command');
             if (this.ws?.readyState !== WebSocket.OPEN) { this.addMessage('Not connected.', 'error'); return; }
+
+            // Optimistically remove taken item from room list so AC stays tidy
+            const parts = text.toLowerCase().split(/\s+/);
+            if (['take', 'get', 'pick'].includes(parts[0]) && parts[1] && parts[1] !== 'all') {
+                const target = parts.slice(1).join(' ');
+                this.roomItems = this.roomItems.filter(i => i.toLowerCase() !== target);
+            }
+            // Optimistically remove dropped/equipped item from inventory list
+            if (['drop', 'equip', 'wear'].includes(parts[0]) && parts[1] && parts[1] !== 'all') {
+                const target = parts.slice(1).join(' ');
+                this.inventoryItems = this.inventoryItems.filter(i => i.toLowerCase() !== target);
+            }
+
             this.ws.send(JSON.stringify({ type: 'command', text }));
         },
 
@@ -525,12 +585,29 @@ createApp({
             }
 
             // Track current room from "=== [room]Name[/room] ===" header lines
+            // Clear room items on room change so stale items don't linger
             const roomM = text.match(/===\s*\[room](.*?)\[\/room]\s*===/);
-            if (roomM) this.currentRoom = roomM[1];
+            if (roomM) {
+                if (roomM[1] !== this.currentRoom) this.roomItems = [];
+                this.currentRoom = roomM[1];
+            }
 
             // Extract visible NPC names from [npc]...[/npc] tags (populated by look/go)
             const npcTags = [...text.matchAll(/\[npc](.*?)\[\/npc]/g)];
             if (npcTags.length > 0) this.roomNpcs = npcTags.map(m => m[1]);
+
+            // Merge visible room items from [item] tags (look output replaces; search merges)
+            const itemTags = [...text.matchAll(/\[item](.*?)\[\/item]/g)];
+            if (itemTags.length > 0) {
+                const found = itemTags.map(m => m[1]);
+                for (const name of found) {
+                    if (!this.roomItems.includes(name)) this.roomItems.push(name);
+                }
+            }
+
+            // Replace inventory item list from [invitem] tags (inventory / status commands)
+            const invTags = [...text.matchAll(/\[invitem](.*?)\[\/invitem]/g)];
+            if (invTags.length > 0) this.inventoryItems = invTags.map(m => m[1]);
 
             // Strip nerd and stats blocks from the main output text
             const mainText = text
@@ -669,23 +746,27 @@ createApp({
                 } else if (type === 'ability') {
                     html += ` <span class="hl-ability">${esc(restStr)}</span>`;
                 } else if (type === 'talk') {
-                    // Use known NPC names (from roomNpcs) to find the exact split point.
-                    // Longest-prefix match against argsStr so the full NPC name stays gold
-                    // and everything after it becomes the message (gray italic).
-                    const argsStr   = restStr;
-                    const argsLower = argsStr.toLowerCase();
+                    // Optional intent token before NPC name: color it as hl-ability, then do NPC matching
+                    let npcRest = rest;
+                    if (rest.length > 0 && TALK_INTENTS.has(rest[0].toLowerCase())) {
+                        html += ` <span class="hl-ability">${esc(rest[0])}</span>`;
+                        npcRest = rest.slice(1);
+                    }
+                    const npcStr   = npcRest.join(' ');
+                    const npcLower = npcStr.toLowerCase();
                     let   matchedLen = 0;
                     for (const n of (this.roomNpcs || [])) {
                         const nl = n.toLowerCase();
-                        if (argsLower.startsWith(nl) && nl.length > matchedLen)
+                        if (npcLower.startsWith(nl) && nl.length > matchedLen)
                             matchedLen = nl.length;
                     }
-                    if (matchedLen > 0 && argsStr.length > matchedLen + 1) {
-                        // Confirmed NPC name + at least one space + message character
-                        html += ` <span class="hl-target">${esc(argsStr.slice(0, matchedLen))}</span>`;
-                        html += ` <span class="hl-message">${esc(argsStr.slice(matchedLen + 1))}</span>`;
-                    } else {
-                        html += ` <span class="hl-target">${esc(argsStr)}</span>`;
+                    if (npcStr) {
+                        if (matchedLen > 0 && npcStr.length > matchedLen + 1) {
+                            html += ` <span class="hl-target">${esc(npcStr.slice(0, matchedLen))}</span>`;
+                            html += ` <span class="hl-message">${esc(npcStr.slice(matchedLen + 1))}</span>`;
+                        } else {
+                            html += ` <span class="hl-target">${esc(npcStr)}</span>`;
+                        }
                     }
                 } else if (type === 'target' || type === 'slot') {
                     html += ` <span class="hl-target">${esc(restStr)}</span>`;

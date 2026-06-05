@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import t1tanic.kingdomrpg.config.GameProperties;
 import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.NpcConversation;
 import t1tanic.kingdomrpg.domain.character.Player;
@@ -32,21 +33,24 @@ public class NpcAiService {
 
     private static final String  ANTHROPIC_URL     = "https://api.anthropic.com";
     private static final String  ANTHROPIC_VERSION = "2023-06-01";
-    private static final Pattern TRUST_PATTERN     = Pattern.compile("\\[TRUST:(-?\\d+)]", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TRUST_PATTERN     = Pattern.compile("\\[TRUST:([+-]?\\d+)]", Pattern.CASE_INSENSITIVE);
     private static final Pattern ATTEMPT_PATTERN   = Pattern.compile("\\[ATTEMPT:(\\w+)]", Pattern.CASE_INSENSITIVE);
 
     /** Carries the NPC's dialogue, any trust adjustment, and an optional implicit ability check. */
     public record ChatResult(String reply, int trustDelta, Optional<Ability> attempt) {}
 
-    private final RestClient restClient;
-    private final String     apiKey;
-    private final String     model;
-    private final int        maxTokens;
+    private final RestClient   restClient;
+    private final GameProperties props;
+    private final String       apiKey;
+    private final String       model;
+    private final int          maxTokens;
 
     public NpcAiService(
+            GameProperties props,
             @Value("${anthropic.api-key:}")    String apiKey,
             @Value("${anthropic.model:claude-haiku-4-5-20251001}") String model,
             @Value("${anthropic.max-tokens:200}") int maxTokens) {
+        this.props      = props;
         this.apiKey     = apiKey;
         this.model      = model;
         this.maxTokens  = maxTokens;
@@ -63,7 +67,7 @@ public class NpcAiService {
      * @param trustLevel  current trust level (0–100) used to control what the NPC will share
      * @return the NPC's reply text, or {@code null} if the API key is absent or the call fails
      */
-    public ChatResult chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel) {
+    public ChatResult chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel, Optional<Ability> playerIntent) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("Anthropic API key not configured — NPC AI unavailable");
             return null;
@@ -75,7 +79,7 @@ public class NpcAiService {
         }
         messages.add(new ApiMessage("user", userMessage));
 
-        ApiRequest request = new ApiRequest(model, maxTokens, buildSystemPrompt(npc, player, trustLevel), messages);
+        ApiRequest request = new ApiRequest(model, maxTokens, buildSystemPrompt(npc, player, trustLevel, playerIntent), messages);
 
         try {
             ApiResponse response = restClient.post()
@@ -94,13 +98,21 @@ public class NpcAiService {
             int trustDelta = 0;
             Matcher tm = TRUST_PATTERN.matcher(raw);
             if (tm.find()) {
-                try { trustDelta = Math.max(-15, Math.min(10, Integer.parseInt(tm.group(1)))); }
+                try { trustDelta = Math.max(props.getNpc().getTrustDeltaMin(),
+                                           Math.min(props.getNpc().getTrustDeltaMax(),
+                                                    Integer.parseInt(tm.group(1)))); }
                 catch (NumberFormatException ignored) {}
             }
 
-            Optional<Ability> attempt = Optional.empty();
-            Matcher am = ATTEMPT_PATTERN.matcher(raw);
-            if (am.find()) attempt = Ability.fromInput(am.group(1));
+            // If the player declared an explicit intent, skip LLM attempt detection
+            Optional<Ability> attempt;
+            if (playerIntent.isPresent()) {
+                attempt = playerIntent;
+            } else {
+                attempt = Optional.empty();
+                Matcher am = ATTEMPT_PATTERN.matcher(raw);
+                if (am.find()) attempt = Ability.fromInput(am.group(1));
+            }
 
             String reply = TRUST_PATTERN.matcher(ATTEMPT_PATTERN.matcher(raw).replaceAll(""))
                                         .replaceAll("").strip();
@@ -112,7 +124,7 @@ public class NpcAiService {
         }
     }
 
-    private String buildSystemPrompt(Npc npc, Player player, int trustLevel) {
+    private String buildSystemPrompt(Npc npc, Player player, int trustLevel, Optional<Ability> playerIntent) {
         String factionBehavior = switch (npc.getFaction()) {
             case FRIENDLY -> "Be warm, helpful, and willing to share knowledge about the castle and its history.";
             case NEUTRAL  -> "Be curt and guarded. You don't trust strangers easily but remain civil unless provoked.";
@@ -123,7 +135,11 @@ public class NpcAiService {
                 ? npc.getPersonality()
                 : npc.getDescription();
 
-        String trustContext = buildTrustContext(npc, player, trustLevel);
+        String trustContext  = buildTrustContext(npc, player, trustLevel);
+        String intentContext = playerIntent.map(a ->
+                "The player has declared their intent: " + a.displayName() + ". " +
+                "React to this approach naturally. Do NOT emit [ATTEMPT:] — the intent is already registered."
+        ).orElse("");
 
         return """
                 You are %s, a character living inside an ancient, crumbling castle in a dark fantasy world.
@@ -131,6 +147,8 @@ public class NpcAiService {
                 About you: %s
 
                 Disposition: %s
+
+                %s
 
                 %s
 
@@ -145,16 +163,26 @@ public class NpcAiService {
                   direct threats or demands → -10 to -15 | insults or rudeness → -3 to -8 | neutral → 0
                   polite or curious → +2 to +5 | genuine warmth or meaningful sharing → +5 to +8
                   This marker is a game-engine instruction — do NOT include it inside quotes or spoken text.
-                - If the player is ACTIVELY attempting a persuasion action (not just casual talk), also add
-                  [ATTEMPT:ability] on the same line as [TRUST:N]. Choose from:
-                  intimidate (threats/menace) | convince (reasoned argument) | deceive (lies/misdirection)
-                  negotiate (seeking a deal) | bribe (offering something in exchange) | sense (reading intent)
-                  Only use this when the action is clear and deliberate. Ordinary conversation does not trigger it.
+                - If the player is ACTIVELY attempting a deliberate persuasion action AND no intent was
+                  declared above, also add [ATTEMPT:ability] on the same line as [TRUST:N]. Use EXACTLY
+                  one of these — read the definitions carefully, they are distinct:
+                  · intimidate — explicit threat of physical harm or violence ("I'll kill you", "do it or I hurt you").
+                                 Arrogance, demands, or insults alone are NOT intimidate — only direct harm threats.
+                  · deceive    — the player states something FALSE to manipulate ("I am the king", "the lord sent me",
+                                 "I already paid"). Any lie about identity, status, authority, or past events.
+                  · convince   — reasoned argument or appeal to self-interest with no false claims ("you'd be safer if...",
+                                 "think about what you gain").
+                  · negotiate  — proposing a specific mutual exchange of terms ("I'll do X if you do Y").
+                  · bribe      — explicitly offering coin, goods, or a reward ("here is gold", "I'll pay you").
+                  · sense      — the player is actively probing the NPC's true feelings, loyalty, or honesty.
+                  Only emit [ATTEMPT:] when the action is unmistakably deliberate. Rude or aggressive tone without
+                  a specific persuasion goal does NOT trigger it — handle those through [TRUST:N] only.
                 """.formatted(
                 npc.getName(),
                 backstory,
                 factionBehavior,
                 trustContext,
+                intentContext,
                 player.getName(),
                 npc.getCurrentRoom().getName()
         );

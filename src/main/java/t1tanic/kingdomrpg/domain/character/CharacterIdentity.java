@@ -1,17 +1,24 @@
 package t1tanic.kingdomrpg.domain.character;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterBackground;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterBackgroundConverter;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterClass;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterClassConverter;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterRace;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterRaceConverter;
 
 /**
  * Represents the profile and narrative identity details of a character.
- * <p>This class is designed to be embedded within a character entity using JPA
- * ({@link Embeddable}), mapping the character's biographical traits directly into
- * the host entity's database table. It encapsulates purely descriptive, non-statistical
- * background details.</p>
- * * @author t1tanic
+ * <p>Embedded directly into the host entity's table. All three typed fields use JPA
+ * {@link Convert} to store lowercase string ids (e.g. {@code "halforc"}, {@code "mage"},
+ * {@code "outlander"}), keeping values human-readable and compatible with the frontend payload.</p>
+ *
+ * @author t1tanic
  * @version 1.0
  */
 @Embeddable
@@ -19,20 +26,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CharacterIdentity {
-    /**
-     * The fantasy race of the character (e.g., Human, Elf, Dwarf).
-     */
-    private String race;
-    /**
-     * The professional archetype or occupational class of the character (e.g., Warrior, Mage, Rogue).
-     */
-    private String characterClass;
-    /**
-     * The gender identity of the character.
-     */
+
+    /** The fantasy race of the character. Stored as a normalised lowercase id (e.g. {@code "halforc"}). */
+    @Convert(converter = CharacterRaceConverter.class)
+    private CharacterRace race;
+
+    /** The professional archetype of the character. Stored as a lowercase id (e.g. {@code "mage"}). */
+    @Convert(converter = CharacterClassConverter.class)
+    private CharacterClass characterClass;
+
+    /** The gender identity of the character. */
     private String gender;
-    /**
-     * The historical origin story or social background of the character (e.g., Noble, Acolyte, Criminal).
-     */
-    private String background;
+
+    /** The historical background of the character. Stored as a lowercase name (e.g. {@code "outlander"}). */
+    @Convert(converter = CharacterBackgroundConverter.class)
+    private CharacterBackground background;
 }

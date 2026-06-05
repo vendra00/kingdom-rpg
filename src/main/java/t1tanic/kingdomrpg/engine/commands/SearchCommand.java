@@ -14,6 +14,7 @@ import t1tanic.kingdomrpg.repository.PlayerRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -68,7 +69,7 @@ public class SearchCommand implements Command {
         if (hidden.isEmpty()) {
             return "You search the area thoroughly but find nothing out of the ordinary.";
         }
-        return containerSearch(String.join(" ", args).toLowerCase(), hidden);
+        return containerSearch(String.join(" ", args), hidden);
     }
 
     private String perceptionScan(Player player, List<Item> hidden, long roomId) {
@@ -114,8 +115,7 @@ public class SearchCommand implements Command {
 
     private String containerSearch(String target, List<Item> hidden) {
         List<Item> inside = hidden.stream()
-            .filter(i -> i.getHiddenIn() != null
-                      && i.getHiddenIn().toLowerCase().contains(target))
+            .filter(i -> i.getHiddenIn() != null && matchesWord(i.getHiddenIn(), target))
             .toList();
 
         if (inside.isEmpty()) {
@@ -130,6 +130,12 @@ public class SearchCommand implements Command {
             .collect(Collectors.joining(", "));
 
         return "You rummage through " + containerName + "...\nYou find: " + found;
+    }
+
+    private static boolean matchesWord(String text, String word) {
+        return Pattern.compile("\\b" + Pattern.quote(word) + "\\b", Pattern.CASE_INSENSITIVE)
+                      .matcher(text)
+                      .find();
     }
 
     private void reveal(Item item) {

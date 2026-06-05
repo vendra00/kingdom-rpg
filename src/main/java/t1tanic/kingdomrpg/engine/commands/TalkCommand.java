@@ -2,6 +2,7 @@ package t1tanic.kingdomrpg.engine.commands;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import t1tanic.kingdomrpg.config.GameProperties;
 import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.NpcConversation;
 import t1tanic.kingdomrpg.domain.character.NpcTrust;
@@ -16,9 +17,11 @@ import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.NpcConversationRepository;
 import t1tanic.kingdomrpg.repository.NpcRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Command allowing the player to speak with an NPC present in their current room.
@@ -38,8 +41,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TalkCommand implements Command {
 
-    private static final int MAX_HISTORY = 20;
+    private static final Set<String> INTENT_KEYWORDS = Set.of(
+            "neutral", "intimidate", "convince", "deceive", "negotiate", "bribe", "sense"
+    );
 
+    private final GameProperties             props;
     private final NpcRepository             npcRepository;
     private final NpcConversationRepository conversationRepository;
     private final NpcAiService              npcAiService;
@@ -49,23 +55,34 @@ public class TalkCommand implements Command {
     @Override
     public String execute(Player player, String[] args) {
         if (args.length == 0) {
-            return "Talk to whom? (type: talk <name> <message>)";
+            return "Talk to whom? (type: talk [intent] <name> <message>)";
         }
 
         long roomId = player.getCurrentRoom().getId();
         List<Npc> roomNpcs = npcRepository.findByCurrentRoomIdAndVisibleTrue(roomId);
 
+        // Strip optional explicit intent declaration from the front of args
+        Optional<Ability> playerIntent = Optional.empty();
+        String[] npcArgs = args;
+        if (args.length > 0 && INTENT_KEYWORDS.contains(args[0].toLowerCase())) {
+            String intentStr = args[0].toLowerCase();
+            if (!"neutral".equals(intentStr)) {
+                playerIntent = Ability.fromInput(intentStr);
+            }
+            npcArgs = Arrays.copyOfRange(args, 1, args.length);
+        }
+
         Npc    npc     = null;
         String message = null;
-        for (int i = args.length; i >= 1; i--) {
-            String candidate = String.join(" ", Arrays.copyOfRange(args, 0, i));
+        for (int i = npcArgs.length; i >= 1; i--) {
+            String candidate = String.join(" ", Arrays.copyOfRange(npcArgs, 0, i));
             Npc match = roomNpcs.stream()
                     .filter(n -> n.getName().toLowerCase().contains(candidate.toLowerCase()))
                     .findFirst().orElse(null);
             if (match != null) {
                 npc     = match;
-                message = i < args.length
-                        ? String.join(" ", Arrays.copyOfRange(args, i, args.length))
+                message = i < npcArgs.length
+                        ? String.join(" ", Arrays.copyOfRange(npcArgs, i, npcArgs.length))
                         : null;
                 break;
             }
@@ -89,11 +106,12 @@ public class TalkCommand implements Command {
 
         List<NpcConversation> history = conversationRepository
                 .findByPlayerIdAndNpcIdOrderByCreatedAtAsc(player.getId(), npc.getId());
-        if (history.size() > MAX_HISTORY) {
-            history = history.subList(history.size() - MAX_HISTORY, history.size());
+        int historyLimit = props.getNpc().getConversationHistoryLimit();
+        if (history.size() > historyLimit) {
+            history = new ArrayList<>(history.subList(history.size() - historyLimit, history.size()));
         }
 
-        NpcAiService.ChatResult result = npcAiService.chat(npc, player, message, history, trustBefore);
+        NpcAiService.ChatResult result = npcAiService.chat(npc, player, message, history, trustBefore, playerIntent);
         String aiReply;
         int trustDelta = 0;
         if (result != null && !result.reply().isBlank()) {
@@ -106,8 +124,10 @@ public class TalkCommand implements Command {
         saveMessage(player, npc, NpcConversationRole.USER,      message);
         saveMessage(player, npc, NpcConversationRole.ASSISTANT, aiReply);
 
-        // Run implicit ability check if the LLM flagged one (e.g. intimidate, convince)
-        Optional<Ability> attempt = result != null ? result.attempt() : Optional.empty();
+        // Declared player intent takes priority; fall back to LLM-detected attempt
+        Optional<Ability> attempt = playerIntent.isPresent()
+                ? playerIntent
+                : (result != null ? result.attempt() : Optional.empty());
         AbilityCheckService.CheckResult checkResult = attempt
                 .map(a -> abilityCheckService.resolve(player, a))
                 .orElse(null);

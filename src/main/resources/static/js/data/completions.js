@@ -19,8 +19,7 @@ export const COMMAND_COMPLETIONS = [
     { value: 'search',     hint: 'Search the room or a specific container' },
     { value: 'equip',      hint: 'Equip an item from your inventory' },
     { value: 'unequip',    hint: 'Remove an item from an equipped slot' },
-    { value: 'talk',       hint: 'Talk to an NPC  (talk <name> <message>)' },
-    { value: 'persuade',   hint: 'Persuade an NPC to trust you more  (d20 + CHA vs DC)' },
+    { value: 'talk',       hint: 'Talk to an NPC  (talk [intent] <name> <message>)' },
     { value: 'help',       hint: 'Show all available commands' },
 ];
 
@@ -56,6 +55,16 @@ export const DICE_COMPLETIONS = [
     { value: '2d6',    hint: 'Two six-sided dice' },
     { value: '2d6+3',  hint: 'Two d6 with +3 modifier' },
     { value: '1d20+5', hint: 'd20 with +5 modifier' },
+];
+
+export const TALK_INTENT_COMPLETIONS = [
+    { value: 'neutral',    hint: 'No persuasion — just talking' },
+    { value: 'convince',   hint: 'Persuasion · Reasoned argument or appeal to self-interest' },
+    { value: 'intimidate', hint: 'Persuasion · Explicit threat of physical harm' },
+    { value: 'deceive',    hint: 'Persuasion · State a falsehood to manipulate' },
+    { value: 'negotiate',  hint: 'Persuasion · Propose a specific mutual exchange' },
+    { value: 'bribe',      hint: 'Persuasion · Offer coin, goods, or a reward' },
+    { value: 'sense',      hint: 'Persuasion · Probe for true feelings or loyalty' },
 ];
 
 export const ABILITY_COMPLETIONS = [

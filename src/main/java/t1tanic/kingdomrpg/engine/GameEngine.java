@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import t1tanic.kingdomrpg.domain.character.*;
 import t1tanic.kingdomrpg.domain.character.enums.Attribute;
 import t1tanic.kingdomrpg.domain.character.enums.CharacterBackground;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterClass;
 import t1tanic.kingdomrpg.domain.character.enums.CharacterRace;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
 import t1tanic.kingdomrpg.domain.world.Room;
@@ -113,9 +114,10 @@ public class GameEngine {
         String genderStr     = (String) payload.getOrDefault("gender",          "other");
         String backgroundStr = (String) payload.getOrDefault("background",      "noble");
 
-        log.info("Creating new player — {}/{} background:{}", raceStr, classStr, backgroundStr);
-        CharacterRace race = CharacterRace.fromString(raceStr);
-        CharacterBackground bg   = CharacterBackground.fromString(backgroundStr);
+        CharacterRace       race      = CharacterRace.fromString(raceStr);
+        CharacterClass      charClass = CharacterClass.fromString(classStr);
+        CharacterBackground bg        = CharacterBackground.fromString(backgroundStr);
+        log.info("Creating new player — {}/{} background:{}", race, charClass, bg);
 
         // Start from point-buy values sent by the client
         Map<Attribute, Integer> base = new EnumMap<>(Attribute.class);
@@ -133,7 +135,7 @@ public class GameEngine {
         Player player = new Player();
         player.setName(name);
         player.setCurrentRoom(startRoom);
-        player.setIdentity(new CharacterIdentity(raceStr, classStr, genderStr, backgroundStr));
+        player.setIdentity(new CharacterIdentity(race, charClass, genderStr, bg));
         player.setAttributes(new CharacterAttributes(
             base.get(STRENGTH),
             base.get(DEXTERITY),

@@ -23,6 +23,11 @@ public enum CharacterClass {
     /** Lowercase key stored in the database and matched by {@code LIKE %id%} queries. */
     public String id() { return id; }
 
+    /** Capitalised display name for UI output (e.g. "Warrior", "Mage"). */
+    public String displayName() {
+        return Character.toUpperCase(id.charAt(0)) + id.substring(1);
+    }
+
     /**
      * Parses a raw string into a {@code CharacterClass}, falling back to {@link #WARRIOR} if unrecognised.
      *

@@ -56,6 +56,12 @@ public enum CharacterBackground {
      */
     public Map<Attribute, Integer> getBonuses() { return bonuses; }
 
+    /** Capitalised display name for UI output (e.g. {@code "Outlander"}). */
+    public String displayName() {
+        String n = name();
+        return Character.toUpperCase(n.charAt(0)) + n.substring(1).toLowerCase();
+    }
+
     /**
      * Safely resolves a string token into its matching {@code CharacterBackground} constant.
      * <p>This strategy normalizes the input to uppercase to match the enum definitions. If the string
