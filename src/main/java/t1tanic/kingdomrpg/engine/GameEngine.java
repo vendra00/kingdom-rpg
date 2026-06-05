@@ -149,6 +149,7 @@ public class GameEngine {
         res.setHealth( player.getMaxHealth());
         res.setMana(   player.getMaxMana());
         res.setStamina(player.getMaxStamina());
+        res.setGold(10);
 
         player.setLearnedCantrips(resolveCantrips(payload.get("cantrips")));
         return playerRepository.save(player);

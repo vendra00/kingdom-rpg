@@ -7,7 +7,11 @@ import t1tanic.kingdomrpg.domain.character.CharacterAttributes;
 import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.NpcAbilityOutcomes;
 import t1tanic.kingdomrpg.domain.character.enums.NpcFaction;
+import t1tanic.kingdomrpg.domain.enums.DamageType;
+import t1tanic.kingdomrpg.domain.item.Weapon;
+import t1tanic.kingdomrpg.domain.item.enums.WeaponRange;
 import t1tanic.kingdomrpg.domain.world.Room;
+import t1tanic.kingdomrpg.repository.ItemRepository;
 import t1tanic.kingdomrpg.repository.NpcRepository;
 
 import java.util.List;
@@ -18,10 +22,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NpcInitializer {
 
-    private final NpcRepository npcRepository;
+    private final NpcRepository  npcRepository;
+    private final ItemRepository itemRepository;
 
     public void seed(Map<String, Room> rooms) {
         log.debug("Seeding NPCs...");
+        // Use a mutable list so we can find saved entities by name below
         var npcs = List.of(
 
             npc("Keeper Aldric",
@@ -38,7 +44,7 @@ public class NpcInitializer {
                 "like a bell struck underwater. The old kings sealed a chamber below the west tower. " +
                 "I believe that is where the answers lie, and why I have never dared to look.",
                 NpcFaction.FRIENDLY, rooms.get("library"),
-                3, 50, 65, 13,
+                3, 50, 65, 13, 20,
                 NpcAbilityOutcomes.builder()
                     .convinceSuccess("He adjusts his spectacles slowly. 'I... suppose you make a fair point. Very well.'")
                     .convinceFailure("He shakes his head. 'An interesting argument. Unconvincing, but interesting.'")
@@ -60,7 +66,7 @@ public class NpcInitializer {
                 "The ambush was not random. Someone inside the castle left the east passage unlatched that night. " +
                 "I never found out who, but the only person still here who was here then is that old scholar in the library.",
                 NpcFaction.NEUTRAL, rooms.get("hallway"),
-                2, 25, 75, 18,
+                2, 25, 75, 18, 3,
                 NpcAbilityOutcomes.builder()
                     .bribeSuccess("His eyes linger on the coin. He takes it without a word and steps back half a pace.")
                     .bribeFailure("He shoves your hand aside. 'Keep your gold. I'm not for sale.'")
@@ -86,16 +92,17 @@ public class NpcInitializer {
                 null,
                 null,
                 NpcFaction.HOSTILE, rooms.get("armory"),
-                5, 0, 100, 30,
+                5, 0, 100, 30, 0,
                 null)
         );
-        npcRepository.saveAll(npcs);
-        log.info("Seeded {} NPCs", npcs.size());
+        List<Npc> saved = npcRepository.saveAll(npcs);
+        seedNpcItems(saved);
+        log.info("Seeded {} NPCs", saved.size());
     }
 
     private Npc npc(String name, String description, String personality, String greeting, String secret,
                     NpcFaction faction, Room room, int level,
-                    int baseTrust, int secretThreshold, int persuadeDc,
+                    int baseTrust, int secretThreshold, int persuadeDc, int gold,
                     NpcAbilityOutcomes outcomes) {
         Npc n = new Npc();
         n.setName(name);
@@ -116,6 +123,27 @@ public class NpcInitializer {
         n.getResources().setHealth(n.getMaxHealth());
         n.getResources().setMana(n.getMaxMana());
         n.getResources().setStamina(n.getMaxStamina());
+        n.getResources().setGold(gold);
         return n;
+    }
+
+    private void seedNpcItems(List<Npc> saved) {
+        Npc guard = saved.stream().filter(n -> n.getName().equals("Scarred Guard")).findFirst().orElse(null);
+        if (guard == null) return;
+
+        Weapon dagger = new Weapon();
+        dagger.setName("Worn Dagger");
+        dagger.setDescription("A dull blade held together by determination and rust. Still sharp enough to kill.");
+        dagger.setWeightGrams(300);
+        dagger.setAttackMin(1);
+        dagger.setAttackMax(3);
+        dagger.setWeaponRange(WeaponRange.MELEE);
+        dagger.setDamageType(DamageType.PIERCING);
+        dagger.setDurability(35);
+        dagger.setMaxDurability(100);
+        dagger.setNpc(guard);
+        dagger.setVisible(true);
+        itemRepository.save(dagger);
+        log.debug("Seeded Worn Dagger on Scarred Guard");
     }
 }

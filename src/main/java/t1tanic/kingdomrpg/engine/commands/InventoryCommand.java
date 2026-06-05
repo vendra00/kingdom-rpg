@@ -44,13 +44,19 @@ public class InventoryCommand implements Command {
     @Override
     public String execute(Player player, String[] args) {
         List<Item> items = itemRepository.findByPlayerId(player.getId());
-        if (items.isEmpty()) return "Your inventory is empty.";
+        int gold = player.getResources().getGold();
+        String goldLine = MarkupTag.color("#ffd700", "⬡ " + gold + " gold");
+
+        if (items.isEmpty()) {
+            return goldLine + "\n\nYour inventory is empty.";
+        }
 
         Map<ItemTag, List<Item>> byTag = items.stream()
             .collect(Collectors.groupingBy(Item::getItemTag));
 
         Equipment eq = player.getEquipment();
         StringBuilder sb = new StringBuilder();
+        sb.append(goldLine).append("\n\n");
         boolean first = true;
         for (ItemTag tag : ItemTag.values()) {
             List<Item> group = byTag.get(tag);

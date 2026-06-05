@@ -67,7 +67,7 @@ public class NpcAiService {
      * @param trustLevel  current trust level (0–100) used to control what the NPC will share
      * @return the NPC's reply text, or {@code null} if the API key is absent or the call fails
      */
-    public ChatResult chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel, Optional<Ability> playerIntent) {
+    public ChatResult chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel, Optional<Ability> playerIntent, boolean intentDeclared) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("Anthropic API key not configured — NPC AI unavailable");
             return null;
@@ -79,7 +79,7 @@ public class NpcAiService {
         }
         messages.add(new ApiMessage("user", userMessage));
 
-        ApiRequest request = new ApiRequest(model, maxTokens, buildSystemPrompt(npc, player, trustLevel, playerIntent), messages);
+        ApiRequest request = new ApiRequest(model, maxTokens, buildSystemPrompt(npc, player, trustLevel, playerIntent, intentDeclared), messages);
 
         try {
             ApiResponse response = restClient.post()
@@ -104,10 +104,10 @@ public class NpcAiService {
                 catch (NumberFormatException ignored) {}
             }
 
-            // If the player declared an explicit intent, skip LLM attempt detection
+            // If any intent was declared (including neutral), skip LLM attempt detection
             Optional<Ability> attempt;
-            if (playerIntent.isPresent()) {
-                attempt = playerIntent;
+            if (intentDeclared) {
+                attempt = playerIntent;  // empty for neutral, present for all other intents
             } else {
                 attempt = Optional.empty();
                 Matcher am = ATTEMPT_PATTERN.matcher(raw);
@@ -124,7 +124,7 @@ public class NpcAiService {
         }
     }
 
-    private String buildSystemPrompt(Npc npc, Player player, int trustLevel, Optional<Ability> playerIntent) {
+    private String buildSystemPrompt(Npc npc, Player player, int trustLevel, Optional<Ability> playerIntent, boolean intentDeclared) {
         String factionBehavior = switch (npc.getFaction()) {
             case FRIENDLY -> "Be warm, helpful, and willing to share knowledge about the castle and its history.";
             case NEUTRAL  -> "Be curt and guarded. You don't trust strangers easily but remain civil unless provoked.";
@@ -136,10 +136,16 @@ public class NpcAiService {
                 : npc.getDescription();
 
         String trustContext  = buildTrustContext(npc, player, trustLevel);
-        String intentContext = playerIntent.map(a ->
-                "The player has declared their intent: " + a.displayName() + ". " +
-                "React to this approach naturally. Do NOT emit [ATTEMPT:] — the intent is already registered."
-        ).orElse("");
+        String intentContext;
+        if (!intentDeclared) {
+            intentContext = "";
+        } else if (playerIntent.isPresent()) {
+            intentContext = "The player has declared their intent: " + playerIntent.get().displayName() + ". " +
+                    "React to this approach naturally. Do NOT emit [ATTEMPT:] — the intent is already registered.";
+        } else {
+            intentContext = "The player has declared a neutral intent — they are simply talking. " +
+                    "Do NOT emit any [ATTEMPT:] tag regardless of message content.";
+        }
 
         return """
                 You are %s, a character living inside an ancient, crumbling castle in a dark fantasy world.

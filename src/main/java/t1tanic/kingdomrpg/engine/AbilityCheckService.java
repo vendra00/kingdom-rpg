@@ -39,8 +39,28 @@ public class AbilityCheckService {
     ) {}
 
     public CheckResult resolve(Player player, Ability ability) {
-        int      mod    = player.getAttributes().modifier(ability.category().attribute());
-        String   attr   = ability.category().attribute().abbrev();
+        // Pick the best modifier among all contributing attributes
+        Attribute[] attrs   = ability.attributes();
+        Attribute   bestAttr = attrs[0];
+        int         bestMod  = player.getAttributes().modifier(attrs[0]);
+        for (int i = 1; i < attrs.length; i++) {
+            int m = player.getAttributes().modifier(attrs[i]);
+            if (m > bestMod) { bestMod = m; bestAttr = attrs[i]; }
+        }
+        int mod = bestMod;
+
+        // Label: single → "CHA", multi → "STR/CHA" (winner first)
+        String attrLabel;
+        if (attrs.length == 1) {
+            attrLabel = bestAttr.abbrev();
+        } else {
+            StringBuilder lb = new StringBuilder(bestAttr.abbrev());
+            for (Attribute a : attrs) {
+                if (a != bestAttr) lb.append('/').append(a.abbrev());
+            }
+            attrLabel = lb.toString();
+        }
+
         DiceRoll roll   = Dice.D20.roll().plus(mod);
         int      raw    = roll.rolls().get(0);
         int      total  = roll.total();
@@ -49,7 +69,7 @@ public class AbilityCheckService {
         boolean  success = crit || (!fumble && total >= ability.dc());
 
         String sign = mod >= 0 ? " + " : " - ";
-        String base = "d20 → " + raw + sign + Math.abs(mod) + " (" + attr + ") = "
+        String base = "d20 → " + raw + sign + Math.abs(mod) + " (" + attrLabel + ") = "
                     + MarkupTag.ITEM.wrap(String.valueOf(total));
         String rollLine;
         if (crit)        rollLine = base + "  — CRITICAL!";

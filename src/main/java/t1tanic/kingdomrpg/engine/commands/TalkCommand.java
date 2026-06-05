@@ -16,6 +16,7 @@ import t1tanic.kingdomrpg.engine.ai.NpcTrustService;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
 import t1tanic.kingdomrpg.repository.NpcConversationRepository;
 import t1tanic.kingdomrpg.repository.NpcRepository;
+import t1tanic.kingdomrpg.repository.PlayerRepository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,7 @@ public class TalkCommand implements Command {
     private final NpcAiService              npcAiService;
     private final NpcTrustService           npcTrustService;
     private final AbilityCheckService       abilityCheckService;
+    private final PlayerRepository          playerRepository;
 
     @Override
     public String execute(Player player, String[] args) {
@@ -62,9 +64,11 @@ public class TalkCommand implements Command {
         List<Npc> roomNpcs = npcRepository.findByCurrentRoomIdAndVisibleTrue(roomId);
 
         // Strip optional explicit intent declaration from the front of args
+        boolean intentDeclared = false;
         Optional<Ability> playerIntent = Optional.empty();
         String[] npcArgs = args;
         if (args.length > 0 && INTENT_KEYWORDS.contains(args[0].toLowerCase())) {
+            intentDeclared = true;
             String intentStr = args[0].toLowerCase();
             if (!"neutral".equals(intentStr)) {
                 playerIntent = Ability.fromInput(intentStr);
@@ -111,7 +115,7 @@ public class TalkCommand implements Command {
             history = new ArrayList<>(history.subList(history.size() - historyLimit, history.size()));
         }
 
-        NpcAiService.ChatResult result = npcAiService.chat(npc, player, message, history, trustBefore, playerIntent);
+        NpcAiService.ChatResult result = npcAiService.chat(npc, player, message, history, trustBefore, playerIntent, intentDeclared);
         String aiReply;
         int trustDelta = 0;
         if (result != null && !result.reply().isBlank()) {
@@ -124,10 +128,10 @@ public class TalkCommand implements Command {
         saveMessage(player, npc, NpcConversationRole.USER,      message);
         saveMessage(player, npc, NpcConversationRole.ASSISTANT, aiReply);
 
-        // Declared player intent takes priority; fall back to LLM-detected attempt
+        // Declared player intent takes priority; fall back to LLM-detected attempt only when no intent was declared
         Optional<Ability> attempt = playerIntent.isPresent()
                 ? playerIntent
-                : (result != null ? result.attempt() : Optional.empty());
+                : (!intentDeclared && result != null ? result.attempt() : Optional.empty());
         AbilityCheckService.CheckResult checkResult = attempt
                 .map(a -> abilityCheckService.resolve(player, a))
                 .orElse(null);
@@ -160,6 +164,27 @@ public class TalkCommand implements Command {
             // NPC-specific authored outcome narrative (game-master flavor layer)
             npc.abilityOutcome(ability, checkResult.success())
                .ifPresent(outcome -> sb.append(MarkupTag.NARRATE.wrap(outcome)).append("\n"));
+
+            // Gold transfer on bribe — deduct regardless of outcome (offer was made)
+            if (ability == Ability.BRIBE) {
+                int cost = props.getNpc().getBribeCost();
+                int playerGold = player.getResources().getGold();
+                if (playerGold >= cost) {
+                    player.getResources().setGold(playerGold - cost);
+                    if (checkResult.success()) {
+                        npc.getResources().setGold(npc.getResources().getGold() + cost);
+                        npcRepository.save(npc);
+                        sb.append(MarkupTag.NERD.wrap("Gold: you −" + cost + " → " + (playerGold - cost)
+                                + "  |  " + npc.getName() + " +" + cost)).append("\n");
+                    } else {
+                        sb.append(MarkupTag.NERD.wrap("Gold: you −" + cost + " → " + (playerGold - cost)
+                                + "  (offer refused — coin lost)")).append("\n");
+                    }
+                    playerRepository.save(player);
+                } else {
+                    sb.append(MarkupTag.NARRATE.wrap("You reach for your purse — not enough gold to make the offer.")).append("\n");
+                }
+            }
         }
 
         sb.append(MarkupTag.NERD.wrap(trustLine)).append("\n");

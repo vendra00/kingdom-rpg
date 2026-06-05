@@ -28,6 +28,7 @@ const VERB_TYPES = {
     search:'target', examine:'target', inspect:'target',
     equip:'target', wear:'target',
     talk:'talk', speak:'talk', greet:'talk',
+    steal:'steal', pickpocket:'steal', rob:'steal',
     roll:'dice',
     cast:'ability', use:'ability',
     attempt:'ability', try:'ability',
@@ -359,6 +360,15 @@ createApp({
                 pool = ABILITY_COMPLETIONS;
             } else if (verb === 'roll') {
                 pool = DICE_COMPLETIONS;
+            } else if (['steal', 'pickpocket', 'rob'].includes(verb)) {
+                // Direct NPC completions — no intent stage
+                const afterVerb = words.slice(1).join(' ').toLowerCase();
+                this.ac.items = this.roomNpcs
+                    .filter(n => n.toLowerCase().startsWith(afterVerb))
+                    .map(n => ({ value: n.toLowerCase(), hint: 'Steal from this character', npcCompletion: true }))
+                    .slice(0, 8);
+                this.ac.idx = -1;
+                return;
             } else if (['talk', 'speak', 'greet'].includes(verb)) {
                 const afterVerb = words.slice(1); // words after verb (trimEnd already applied)
 
@@ -745,6 +755,21 @@ createApp({
                     html += ` <span class="${cls}">${esc(restStr)}</span>`;
                 } else if (type === 'ability') {
                     html += ` <span class="hl-ability">${esc(restStr)}</span>`;
+                } else if (type === 'steal') {
+                    // NPC name in gold, optional item name in gray — no intent stage
+                    const argsStr   = restStr;
+                    const argsLower = argsStr.toLowerCase();
+                    let   matchedLen = 0;
+                    for (const n of (this.roomNpcs || [])) {
+                        const nl = n.toLowerCase();
+                        if (argsLower.startsWith(nl) && nl.length > matchedLen) matchedLen = nl.length;
+                    }
+                    if (matchedLen > 0 && argsStr.length > matchedLen + 1) {
+                        html += ` <span class="hl-target">${esc(argsStr.slice(0, matchedLen))}</span>`;
+                        html += ` <span class="hl-message">${esc(argsStr.slice(matchedLen + 1))}</span>`;
+                    } else {
+                        html += ` <span class="hl-target">${esc(argsStr)}</span>`;
+                    }
                 } else if (type === 'talk') {
                     // Optional intent token before NPC name: color it as hl-ability, then do NPC matching
                     let npcRest = rest;

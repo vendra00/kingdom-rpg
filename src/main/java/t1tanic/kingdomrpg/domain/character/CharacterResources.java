@@ -37,4 +37,11 @@ public class CharacterResources {
      * Measured against the maximum carrying capacity to determine encumbrance penalties.
      */
     private int carryWeight;
+
+    /**
+     * The amount of gold coins currently held by the character.
+     * Players spend gold on bribes and purchases; NPCs accumulate it through successful bribes
+     * and can be pickpocketed.
+     */
+    private int gold;
 }

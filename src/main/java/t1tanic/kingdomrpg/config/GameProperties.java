@@ -39,6 +39,8 @@ public class GameProperties {
         private int trustDeltaMin = -15;
         /** Maximum trust delta accepted from the LLM's [TRUST:N] signal. */
         private int trustDeltaMax = 8;
+        /** Gold deducted from the player when they attempt a bribe (win or lose). */
+        private int bribeCost = 5;
     }
 
     @Data

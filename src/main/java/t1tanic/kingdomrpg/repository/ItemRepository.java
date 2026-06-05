@@ -36,4 +36,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @return a {@link List} containing all matching {@link Item} records carried by the player
      */
     List<Item> findByPlayerId(Long playerId);
+
+    /**
+     * Retrieves all items currently on a specific NPC's person.
+     *
+     * @param npcId the unique database identifier of the target NPC
+     * @return a {@link List} of items carried by the NPC, ordered by name
+     */
+    List<Item> findByNpcIdOrderByNameAsc(Long npcId);
 }

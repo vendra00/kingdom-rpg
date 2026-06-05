@@ -51,7 +51,8 @@ public class StatusCommand implements Command {
             "  Stamina " + MarkupTag.color("#ffd700", bar(res.getStamina(), player.getMaxStamina()))
                          + "  " + MarkupTag.color("#ffd700", res.getStamina() + " / " + player.getMaxStamina()) + "\n" +
             "  Carry   " + bar(res.getCarryWeight(), player.getMaxCarryWeight())
-                         + "  " + String.format(Locale.US, "%.2f / %.2f kg", res.getCarryWeight() / 1000.0, player.getMaxCarryWeight() / 1000.0);
+                         + "  " + String.format(Locale.US, "%.2f / %.2f kg", res.getCarryWeight() / 1000.0, player.getMaxCarryWeight() / 1000.0) + "\n" +
+            "  Gold    " + MarkupTag.color("#ffd700", "⬡ " + res.getGold() + " gold");
 
         String attrSection = Arrays.stream(Attribute.values())
             .map(attr -> "  %-14s%2d  (%+d)".formatted(cap(attr.key()), attrs.get(attr), attrs.modifier(attr)))

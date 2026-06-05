@@ -20,6 +20,7 @@ export const COMMAND_COMPLETIONS = [
     { value: 'equip',      hint: 'Equip an item from your inventory' },
     { value: 'unequip',    hint: 'Remove an item from an equipped slot' },
     { value: 'talk',       hint: 'Talk to an NPC  (talk [intent] <name> <message>)' },
+    { value: 'steal',      hint: 'Pickpocket an NPC  (steal <name> [item])' },
     { value: 'help',       hint: 'Show all available commands' },
 ];
 

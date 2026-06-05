@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import t1tanic.kingdomrpg.domain.BaseEntity;
+import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.item.enums.ItemCondition;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
@@ -57,6 +58,14 @@ public abstract class Item extends BaseEntity {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "player_id")
     private Player player;
+
+    /**
+     * The NPC currently carrying this item on their person.
+     * Mutually exclusive with {@link #player} and {@link #room}: exactly one is non-null at a time.
+     */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "npc_id")
+    private Npc npc;
     /**
      * Whether this item is currently visible to the player in its room.
      * Hidden items are concealed inside containers or obscured in the environment;

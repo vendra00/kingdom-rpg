@@ -40,6 +40,7 @@ public class CommandParser {
     private final UnequipCommand    unequipCommand;
     private final TalkCommand       talkCommand;
     private final PersuadeCommand   persuadeCommand;
+    private final StealCommand      stealCommand;
     private final MeterRegistry    meterRegistry;
 
     /**
@@ -97,6 +98,7 @@ public class CommandParser {
             case "unequip", "remove"                 -> unequipCommand.execute(player, args);
             case "talk", "speak", "greet"            -> talkCommand.execute(player, args);
             case "persuade", "charm", "flatter"      -> persuadeCommand.execute(player, args);
+            case "steal", "pickpocket", "rob"        -> stealCommand.execute(player, args);
             case "help", "?"                         -> helpCommand.execute(player, args);
             default -> "I don't understand '" + verb + "'. Type 'help' for commands.";
         };
