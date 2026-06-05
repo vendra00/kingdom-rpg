@@ -1,15 +1,17 @@
 package t1tanic.kingdomrpg.domain.magic.enums;
 
 import t1tanic.kingdomrpg.domain.character.enums.CharacterClass;
+import t1tanic.kingdomrpg.domain.enums.DamageType;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.EnumSet;
+import java.util.Set;
 
 import static t1tanic.kingdomrpg.domain.character.enums.CharacterClass.*;
+import static t1tanic.kingdomrpg.domain.enums.DamageType.*;
 import static t1tanic.kingdomrpg.domain.magic.enums.CantripEffect.*;
 import static t1tanic.kingdomrpg.domain.magic.enums.CantripSchool.*;
-import static t1tanic.kingdomrpg.domain.magic.enums.DamageType.*;
 
 /**
  * Canonical registry of every cantrip available in the game.
@@ -185,11 +187,8 @@ public enum CantripDef {
 
     /** Converts this definition into the JPA entity ready for persistence. */
     public Cantrip toEntity() {
-        String dmgLabel  = damageType != null ? damageType.label() : null;
-        String classesStr = Arrays.stream(allowedClasses)
-                                  .map(CharacterClass::id)
-                                  .collect(Collectors.joining(","));
+        Set<CharacterClass> classes = EnumSet.copyOf(Arrays.asList(allowedClasses));
         return new Cantrip(id, displayName, school.displayName(), description,
-                           classesStr, dmgLabel, damageDice, effect);
+                           classes, damageType, damageDice, effect);
     }
 }

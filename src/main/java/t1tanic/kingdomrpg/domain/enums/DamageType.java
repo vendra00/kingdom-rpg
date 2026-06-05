@@ -1,8 +1,8 @@
-package t1tanic.kingdomrpg.domain.item.enums;
+package t1tanic.kingdomrpg.domain.enums;
 
 /**
- * Classifies the elemental or physical nature of damage a weapon deals.
- * <p>Used for resistance, immunity, and vulnerability interactions in combat resolution.</p>
+ * Elemental and physical damage types used across weapons and spells.
+ * <p>{@link #label()} is the capitalised display name; {@link #cssColor()} drives UI colour coding.</p>
  *
  * @author t1tanic
  * @version 1.0
@@ -30,6 +30,9 @@ public enum DamageType {
         this.cssColor = cssColor;
     }
 
+    /** Capitalised display name shown in the UI (e.g. "Fire", "Necrotic"). */
     public String label()    { return label; }
+
+    /** Hex colour used for UI markup (e.g. {@code "#ff4500"}). */
     public String cssColor() { return cssColor; }
 }

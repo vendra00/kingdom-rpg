@@ -41,7 +41,7 @@ public class SpellsCommand implements Command {
         cantrips.stream()
             .sorted(Comparator.comparing(Cantrip::getSchool).thenComparing(Cantrip::getName))
             .forEach(c -> {
-                String dmg = c.getDamageType() != null ? "  " + MarkupTag.ITEM.wrap(c.getDamageType()) : "";
+                String dmg = c.getDamageType() != null ? "  " + MarkupTag.ITEM.wrap(c.getDamageType().label()) : "";
                 sb.append(MarkupTag.ROOM.wrap("%-20s".formatted(c.getName())))
                   .append(" [%s]%s\n".formatted(c.getSchool(), dmg));
                 sb.append("  %s\n\n".formatted(c.getDescription()));

@@ -1,6 +1,8 @@
 package t1tanic.kingdomrpg.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import t1tanic.kingdomrpg.domain.magic.Cantrip;
 
 import java.util.List;
@@ -23,5 +25,6 @@ public interface CantripRepository extends JpaRepository<Cantrip, String> {
      * @param className the lowercase class designator string to search for (e.g., "mage")
      * @return a {@link List} containing all matching {@link Cantrip} entities found in storage
      */
-    List<Cantrip> findByAllowedClassesContaining(String className);
+    @Query(value = "SELECT * FROM cantrip WHERE allowed_classes LIKE CONCAT('%', :className, '%')", nativeQuery = true)
+    List<Cantrip> findByAllowedClassesContaining(@Param("className") String className);
 }

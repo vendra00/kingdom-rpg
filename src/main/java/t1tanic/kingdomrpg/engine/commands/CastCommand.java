@@ -63,7 +63,7 @@ public class CastCommand implements Command {
         String outcome;
         if (c.getDamageDice() != null) {
             DiceRoll roll = Dice.roll(c.getDamageDice());
-            String dmgLine = roll.format() + " " + c.getDamageType() + " damage";
+            String dmgLine = roll.format() + " " + c.getDamageType().label() + " damage";
             outcome = "\n" + MarkupTag.NARRATE.wrap(c.getDescription())
                 + "\n\nDamage roll — " + MarkupTag.ITEM.wrap(dmgLine)
                 + "\n(No enemy present — the energy dissipates harmlessly."

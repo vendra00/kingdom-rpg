@@ -7,7 +7,7 @@ import jakarta.persistence.Enumerated;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import t1tanic.kingdomrpg.domain.item.enums.DamageType;
+import t1tanic.kingdomrpg.domain.enums.DamageType;
 import t1tanic.kingdomrpg.domain.item.enums.ItemTag;
 import t1tanic.kingdomrpg.domain.item.enums.WeaponRange;
 

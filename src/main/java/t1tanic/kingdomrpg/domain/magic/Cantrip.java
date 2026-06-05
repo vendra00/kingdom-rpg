@@ -4,7 +4,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterClass;
+import t1tanic.kingdomrpg.domain.character.enums.CharacterClassSetConverter;
+import t1tanic.kingdomrpg.domain.enums.DamageType;
 import t1tanic.kingdomrpg.domain.magic.enums.CantripEffect;
+
+import java.util.Set;
 
 /**
  * Represents a Cantrip (a basic, infinitely castable level-0 spell) within the RPG domain.
@@ -21,7 +26,7 @@ import t1tanic.kingdomrpg.domain.magic.enums.CantripEffect;
 @AllArgsConstructor
 public class Cantrip {
     /**
-     * The unique, machine-readable string identifier for the cantrip (e.g., "fire-bolt").
+     * The unique, machine-readable string identifier for the cantrip (e.g., "fire_bolt").
      */
     @Id
     private String id;
@@ -40,25 +45,25 @@ public class Cantrip {
     @Column(length = 500)
     private String description;
     /**
-     * Comma-separated list of professional archetype identifiers allowed to learn this cantrip.
-     * <p>Example: {@code "mage,rogue"}</p>
+     * The set of character classes allowed to learn this cantrip.
+     * Persisted as a comma-separated lowercase string (e.g., {@code "mage,rogue"}) via
+     * {@link CharacterClassSetConverter}, keeping the column compatible with LIKE-based queries.
      */
-    private String allowedClasses;
+    @Convert(converter = CharacterClassSetConverter.class)
+    private Set<CharacterClass> allowedClasses;
     /**
-     * The type of elemental or physical damage dealt by this spell.
-     * Retains a {@code null} value if the cantrip is utility-focused or non-damaging.
-     * <p>Example: {@code "Fire"}, {@code "Necrotic"}</p>
+     * The elemental or physical damage type dealt by this spell.
+     * {@code null} for utility, buff, and healing cantrips.
      */
-    private String damageType;
+    @Enumerated(EnumType.STRING)
+    private DamageType damageType;
     /**
-     * The dice notation calculation formula dictating baseline damage resolution tracking.
-     * Retains a {@code null} value if the cantrip is utility-focused or non-damaging.
-     * <p>Example: {@code "1d8"}, {@code "2d4"}</p>
+     * The dice notation formula for baseline damage (e.g., {@code "1d8"}, {@code "2d4"}).
+     * {@code null} for utility, buff, and healing cantrips.
      */
     private String damageDice;
     /**
-     * The specialized status modifier, behavioral mechanic, or operational state flag triggered
-     * upon successful resolution of the cantrip.
+     * The functional effect category triggered upon successful resolution of the cantrip.
      */
     @Enumerated(EnumType.STRING)
     private CantripEffect effect;

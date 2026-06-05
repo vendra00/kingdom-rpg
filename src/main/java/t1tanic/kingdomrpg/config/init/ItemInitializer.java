@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.item.*;
-import t1tanic.kingdomrpg.domain.item.enums.DamageType;
+import t1tanic.kingdomrpg.domain.enums.DamageType;
 import t1tanic.kingdomrpg.domain.item.enums.WeaponRange;
 import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.ItemRepository;
