@@ -3,6 +3,7 @@ package t1tanic.kingdomrpg.domain.character.enums;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static t1tanic.kingdomrpg.domain.character.enums.AbilityCategory.*;
 
@@ -219,6 +220,11 @@ public enum Ability {
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /** Abilities triggered implicitly by the LLM during talk — not available via explicit attempt. */
+    private static final Set<String> CONVERSATION_ONLY = Set.of(
+            "bribe", "intimidate", "convince", "deceive", "negotiate", "sense"
+    );
+
     private final String          id;
     private final String          displayName;
     private final AbilityCategory category;
@@ -237,6 +243,12 @@ public enum Ability {
         this.successMsg  = successMsg;
         this.failureMsg  = failureMsg;
     }
+
+    /**
+     * @return {@code true} if this ability is triggered implicitly through conversation
+     *         and should not be accessible via the explicit {@code attempt} command
+     */
+    public boolean isConversationOnly() { return CONVERSATION_ONLY.contains(id); }
 
     /**
      * @return the machine-readable lowercase string unique identifier

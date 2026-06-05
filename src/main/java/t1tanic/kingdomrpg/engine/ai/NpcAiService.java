@@ -10,8 +10,11 @@ import t1tanic.kingdomrpg.domain.character.Npc;
 import t1tanic.kingdomrpg.domain.character.NpcConversation;
 import t1tanic.kingdomrpg.domain.character.Player;
 
+import t1tanic.kingdomrpg.domain.character.enums.Ability;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,9 +33,10 @@ public class NpcAiService {
     private static final String  ANTHROPIC_URL     = "https://api.anthropic.com";
     private static final String  ANTHROPIC_VERSION = "2023-06-01";
     private static final Pattern TRUST_PATTERN     = Pattern.compile("\\[TRUST:(-?\\d+)]", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ATTEMPT_PATTERN   = Pattern.compile("\\[ATTEMPT:(\\w+)]", Pattern.CASE_INSENSITIVE);
 
-    /** Carries the NPC's dialogue and any trust adjustment the LLM signalled. */
-    public record ChatResult(String reply, int trustDelta) {}
+    /** Carries the NPC's dialogue, any trust adjustment, and an optional implicit ability check. */
+    public record ChatResult(String reply, int trustDelta, Optional<Ability> attempt) {}
 
     private final RestClient restClient;
     private final String     apiKey;
@@ -86,14 +90,21 @@ public class NpcAiService {
             if (response == null) return null;
 
             String raw = response.getText();
+
             int trustDelta = 0;
-            Matcher m = TRUST_PATTERN.matcher(raw);
-            if (m.find()) {
-                try { trustDelta = Math.max(-15, Math.min(10, Integer.parseInt(m.group(1)))); }
+            Matcher tm = TRUST_PATTERN.matcher(raw);
+            if (tm.find()) {
+                try { trustDelta = Math.max(-15, Math.min(10, Integer.parseInt(tm.group(1)))); }
                 catch (NumberFormatException ignored) {}
             }
-            String reply = TRUST_PATTERN.matcher(raw).replaceAll("").strip();
-            return new ChatResult(reply, trustDelta);
+
+            Optional<Ability> attempt = Optional.empty();
+            Matcher am = ATTEMPT_PATTERN.matcher(raw);
+            if (am.find()) attempt = Ability.fromInput(am.group(1));
+
+            String reply = TRUST_PATTERN.matcher(ATTEMPT_PATTERN.matcher(raw).replaceAll(""))
+                                        .replaceAll("").strip();
+            return new ChatResult(reply, trustDelta, attempt);
 
         } catch (Exception e) {
             log.error("Anthropic API call failed: {}", e.getMessage());
@@ -134,6 +145,11 @@ public class NpcAiService {
                   direct threats or demands → -10 to -15 | insults or rudeness → -3 to -8 | neutral → 0
                   polite or curious → +2 to +5 | genuine warmth or meaningful sharing → +5 to +8
                   This marker is a game-engine instruction — do NOT include it inside quotes or spoken text.
+                - If the player is ACTIVELY attempting a persuasion action (not just casual talk), also add
+                  [ATTEMPT:ability] on the same line as [TRUST:N]. Choose from:
+                  intimidate (threats/menace) | convince (reasoned argument) | deceive (lies/misdirection)
+                  negotiate (seeking a deal) | bribe (offering something in exchange) | sense (reading intent)
+                  Only use this when the action is clear and deliberate. Ordinary conversation does not trigger it.
                 """.formatted(
                 npc.getName(),
                 backstory,

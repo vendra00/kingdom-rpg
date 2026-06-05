@@ -8,6 +8,8 @@ import t1tanic.kingdomrpg.domain.character.NpcTrust;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.character.enums.NpcConversationRole;
 import t1tanic.kingdomrpg.domain.character.enums.NpcFaction;
+import t1tanic.kingdomrpg.domain.character.enums.Ability;
+import t1tanic.kingdomrpg.engine.AbilityCheckService;
 import t1tanic.kingdomrpg.engine.ai.NpcAiService;
 import t1tanic.kingdomrpg.engine.ai.NpcTrustService;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
@@ -16,6 +18,7 @@ import t1tanic.kingdomrpg.repository.NpcRepository;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Command allowing the player to speak with an NPC present in their current room.
@@ -41,6 +44,7 @@ public class TalkCommand implements Command {
     private final NpcConversationRepository conversationRepository;
     private final NpcAiService              npcAiService;
     private final NpcTrustService           npcTrustService;
+    private final AbilityCheckService       abilityCheckService;
 
     @Override
     public String execute(Player player, String[] args) {
@@ -102,21 +106,43 @@ public class TalkCommand implements Command {
         saveMessage(player, npc, NpcConversationRole.USER,      message);
         saveMessage(player, npc, NpcConversationRole.ASSISTANT, aiReply);
 
-        // Apply conversation-tone trust delta signalled by the LLM
+        // Run implicit ability check if the LLM flagged one (e.g. intimidate, convince)
+        Optional<Ability> attempt = result != null ? result.attempt() : Optional.empty();
+        AbilityCheckService.CheckResult checkResult = attempt
+                .map(a -> abilityCheckService.resolve(player, a))
+                .orElse(null);
+        int checkDelta = checkResult != null ? checkResult.trustDelta() : 0;
+
+        // Apply combined trust delta (tone + check outcome)
+        int totalDelta = trustDelta + checkDelta;
         int trustAfter = trustBefore;
-        if (trustDelta != 0) {
-            trust      = npcTrustService.adjustTrust(trust, trustDelta);
+        if (totalDelta != 0) {
+            trust      = npcTrustService.adjustTrust(trust, totalDelta);
             trustAfter = trust.getTrustLevel();
         }
 
-        String trustLine = trustDelta != 0
+        String trustLine = totalDelta != 0
                 ? "Trust: " + trustBefore + " → " + trustAfter + "/100 ("
                   + (trustAfter > trustBefore ? "+" : "") + (trustAfter - trustBefore) + ")"
                 : "Trust: " + trustAfter + "/100";
 
-        return MarkupTag.NERD.wrap(trustLine) + "\n" +
-               coloredName + " says:\n" +
-               MarkupTag.NARRATE.wrap("\"" + aiReply + "\"");
+        StringBuilder sb = new StringBuilder();
+
+        // Implicit ability check block (nerd roll + verdict in main output)
+        if (checkResult != null && attempt.isPresent()) {
+            Ability ability = attempt.get();
+            String verdict = checkResult.crit()   ? MarkupTag.EXIT.wrap("EXCEPTIONAL SUCCESS")
+                           : checkResult.fumble() ? MarkupTag.ITEM.wrap("SPECTACULAR FAILURE")
+                           : checkResult.success() ? MarkupTag.EXIT.wrap("SUCCESS")
+                           : "FAILURE";
+            sb.append(MarkupTag.NERD.wrap(ability.displayName() + ": " + checkResult.rollLine())).append("\n");
+            sb.append(verdict).append("  ").append(checkResult.narrative()).append("\n");
+        }
+
+        sb.append(MarkupTag.NERD.wrap(trustLine)).append("\n");
+        sb.append(coloredName).append(" says:\n");
+        sb.append(MarkupTag.NARRATE.wrap("\"" + aiReply + "\""));
+        return sb.toString();
     }
 
     private void saveMessage(Player player, Npc npc, NpcConversationRole role, String content) {

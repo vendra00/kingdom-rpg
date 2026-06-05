@@ -59,16 +59,9 @@ export const DICE_COMPLETIONS = [
 ];
 
 export const ABILITY_COMPLETIONS = [
-    // Persuasion
-    { value: 'bribe',       hint: 'Persuasion · Offer coin to sway loyalty' },
-    { value: 'intimidate',  hint: 'Persuasion · Use menace to instill fear' },
-    { value: 'convince',    hint: 'Persuasion · Argue with reason and charm' },
-    { value: 'deceive',     hint: 'Persuasion · Mislead with a plausible lie' },
-    { value: 'negotiate',   hint: 'Persuasion · Work toward a mutual agreement' },
     // Perception
     { value: 'survey',      hint: 'Perception · Scan for unusual details' },
     { value: 'listen',      hint: 'Perception · Focus hearing for nearby sounds' },
-    { value: 'sense',       hint: 'Perception · Read intentions behind someone\'s words' },
     // Athletics
     { value: 'jump',        hint: 'Athletics  · Leap across a gap or obstacle' },
     { value: 'climb',       hint: 'Athletics  · Scale a wall or vertical surface' },

@@ -51,6 +51,7 @@ public class AbilitiesCommand implements Command {
               .append("\n");
 
             for (Ability a : abilities) {
+                if (a.isConversationOnly()) continue;
                 // Pad the id inside the tag so columns stay aligned across rows
                 String paddedId = String.format("%-13s", a.id());
                 sb.append("  ")
