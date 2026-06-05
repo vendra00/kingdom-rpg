@@ -162,10 +162,14 @@ createApp({
         connectDirect(name) {
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             this.ws = new WebSocket(protocol + '//' + location.host + '/game-ws');
-            this.ws.onopen    = () => {
+            this.setupWsHandlers(() => {
                 this.ws.send(JSON.stringify({ type: 'join', name }));
                 this.$nextTick(() => this.$refs.commandInput?.focus());
-            };
+            });
+        },
+
+        setupWsHandlers(onOpen) {
+            this.ws.onopen    = onOpen;
             this.ws.onmessage = e => { const m = JSON.parse(e.data); this.addMessage(m.text, m.type); };
             this.ws.onclose   = () => this.addMessage('Connection closed. Refresh to reconnect.', 'error');
             this.ws.onerror   = () => this.addMessage('WebSocket error — is the server running?', 'error');
@@ -366,9 +370,7 @@ createApp({
         handleKey(e) {
             if (this.ac.items.length) {
                 if (this.handleAcKey(e)) return;
-            } else {
-                if (this.handleHistoryKey(e)) return;
-            }
+            } else if (this.handleHistoryKey(e)) return;
             if (e.key === 'Enter') this.sendCommand();
         },
 
@@ -422,7 +424,7 @@ createApp({
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             this.ws = new WebSocket(protocol + '//' + location.host + '/game-ws');
 
-            this.ws.onopen = () => {
+            this.setupWsHandlers(() => {
                 this.ws.send(JSON.stringify({
                     type: 'join', name: this.playerName,
                     race: this.char.race, characterClass: this.char.characterClass,
@@ -430,10 +432,7 @@ createApp({
                     attributes: this.char.attrs, cantrips: this.char.cantrips,
                 }));
                 this.$nextTick(() => this.$refs.commandInput?.focus());
-            };
-            this.ws.onmessage = e => { const m = JSON.parse(e.data); this.addMessage(m.text, m.type); };
-            this.ws.onclose   = () => this.addMessage('Connection closed. Refresh to reconnect.', 'error');
-            this.ws.onerror   = () => this.addMessage('WebSocket error — is the server running?', 'error');
+            });
         },
 
         sendCommand() {
@@ -459,7 +458,7 @@ createApp({
 
         addMessage(text, type) {
             // Route [nerd]...[/nerd] blocks to the nerd log
-            const nerdRe = /\[nerd\]([\s\S]*?)\[\/nerd\]/g;
+            const nerdRe = /\[nerd]([\s\S]*?)\[\/nerd]/g;
             let m;
             let hasNerd = false;
             while ((m = nerdRe.exec(text)) !== null) {
@@ -478,7 +477,7 @@ createApp({
             }
 
             // Track current room from "=== [room]Name[/room] ===" header lines
-            const roomM = text.match(/===\s*\[room\](.*?)\[\/room\]\s*===/);
+            const roomM = text.match(/===\s*\[room](.*?)\[\/room]\s*===/);
             if (roomM) this.currentRoom = roomM[1];
 
             // Strip nerd and stats blocks from the main output text
@@ -512,18 +511,18 @@ createApp({
             return esc
                 .replaceAll(/\[nerd][\s\S]*?\[\/nerd]/g,      '')
                 .replaceAll(/\[stats][^[]*\[\/stats]/g,       '')
-                .replace(/\[narrate\](.*?)\[\/narrate\]/g,    '$1')
-                .replace(/\[room\](.*?)\[\/room\]/g,          '<span class="tag-room">$1</span>')
-                .replace(/\[exit\](.*?)\[\/exit\]/g,          '<span class="tag-exit">$1</span>')
-                .replace(/\[item\](.*?)\[\/item\]/g,          (_, name) =>
+                .replaceAll(/[[]narrate](.*?)[[]\/narrate]/g,     '$1')
+                .replaceAll(/[[]room](.*?)[[]\/room]/g,           '<span class="tag-room">$1</span>')
+                .replaceAll(/[[]exit](.*?)[[]\/exit]/g,           '<span class="tag-exit">$1</span>')
+                .replaceAll(/[[]item](.*?)[[]\/item]/g,           (_, name) =>
                     `<span class="tag-item cmd-link" data-cmd="take ${name.toLowerCase()}" title="take ${name.toLowerCase()}">${name}</span>`)
-                .replace(/\[invitem\](.*?)\[\/invitem\]/g,    (_, name) =>
+                .replaceAll(/[[]invitem](.*?)[[]\/invitem]/g,     (_, name) =>
                     `<span class="tag-item cmd-link" data-cmd="equip ${name.toLowerCase()}" title="equip ${name.toLowerCase()}">${name}</span>`)
-                .replace(/\[equipped\](.*?)\[\/equipped\]/g, (_, name) =>
+                .replaceAll(/[[]equipped](.*?)[[]\/equipped]/g,   (_, name) =>
                     `<span class="tag-item cmd-link" data-cmd="unequip ${name.toLowerCase()}" title="unequip ${name.toLowerCase()}">${name}</span>`)
-                .replace(/\[container\](.*?)\[\/container\]/g, (_, name) =>
+                .replaceAll(/[[]container](.*?)[[]\/container]/g, (_, name) =>
                     `<span class="tag-container cmd-link" data-cmd="search ${name.toLowerCase()}" title="search ${name.toLowerCase()}">${name}</span>`)
-                .replace(/\[c=([^\]]+)\](.*?)\[\/c\]/g,       '<span style="color:$1">$2</span>');
+                .replaceAll(/[[]c=([^\]]+)](.*?)[[]\/c]/g,        '<span style="color:$1">$2</span>');
         },
 
         handleOutputClick(e) {
@@ -535,7 +534,7 @@ createApp({
             const current  = this.commandText.trimEnd();
             const typedVerb = current.split(' ')[0];
 
-            // If the player already typed a verb, honour it and just fill the argument
+            // If the player already typed a verb, honor it and just fill the argument
             this.commandText = (current && typedVerb && itemName)
                 ? typedVerb + ' ' + itemName
                 : cmd;
@@ -568,7 +567,7 @@ createApp({
                 .replaceAll(/\[nerd][\s\S]*?\[\/nerd]/g, '')
                 .replaceAll(/\[stats][^[]*\[\/stats]/g, '')
                 .replaceAll(/\[c=[^\]]+]/g, '')
-                .replaceAll(/\[\/c]/g, '')
+                .replaceAll('[/c]', '')
                 .replaceAll(/\[\/?(?:room|exit|item|invitem|equipped|container|narrate)]/g, '');
         },
 
@@ -592,12 +591,19 @@ createApp({
     },
 
     mounted() {
+        // Browsers block autoplay until the first user gesture — start music on first click
+        const onFirstClick = () => {
+            this.startMusic();
+            document.removeEventListener('click', onFirstClick, true);
+        };
+        document.addEventListener('click', onFirstClick, true);
+
         if (globalThis.speechSynthesis) {
             const load = () => { this.availableVoices = globalThis.speechSynthesis.getVoices(); };
             load();
             globalThis.speechSynthesis.addEventListener('voiceschanged', load);
         }
-        this.fetchSaves();
+        void this.fetchSaves();
     },
 
 }).mount('#app');
