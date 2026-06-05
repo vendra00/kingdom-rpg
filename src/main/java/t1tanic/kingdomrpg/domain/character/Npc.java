@@ -75,4 +75,11 @@ public class Npc extends BaseCharacter {
      * Difficulty class for persuasion attempts ({@code d20 + CHA modifier} vs this value).
      */
     private int persuadeDc = 15;
+
+    /**
+     * Whether this NPC is currently visible and interactable by the player.
+     * Hidden NPCs (e.g., concealed behind a wall, inside a container, or cloaked) are not
+     * shown in room descriptions and cannot be talked to or persuaded until revealed.
+     */
+    private boolean visible = true;
 }

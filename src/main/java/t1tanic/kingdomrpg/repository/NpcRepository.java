@@ -20,4 +20,13 @@ public interface NpcRepository extends JpaRepository<Npc, Long> {
      * @return NPCs present in that room, in insertion order
      */
     List<Npc> findByCurrentRoomId(Long roomId);
+
+    /**
+     * Returns only the visible NPCs in the given room — used by look, talk, and persuade
+     * so that hidden NPCs are not revealed until the player discovers them.
+     *
+     * @param roomId the primary key of the target room
+     * @return visible NPCs present in that room
+     */
+    List<Npc> findByCurrentRoomIdAndVisibleTrue(Long roomId);
 }

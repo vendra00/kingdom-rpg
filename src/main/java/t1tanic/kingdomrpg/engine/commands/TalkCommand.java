@@ -49,7 +49,7 @@ public class TalkCommand implements Command {
         }
 
         long roomId = player.getCurrentRoom().getId();
-        List<Npc> roomNpcs = npcRepository.findByCurrentRoomId(roomId);
+        List<Npc> roomNpcs = npcRepository.findByCurrentRoomIdAndVisibleTrue(roomId);
 
         Npc    npc     = null;
         String message = null;
@@ -81,7 +81,7 @@ public class TalkCommand implements Command {
         }
 
         NpcTrust trust = npcTrustService.getOrCreate(player, npc);
-        int trustLevel = trust.getTrustLevel();
+        int trustBefore = trust.getTrustLevel();
 
         List<NpcConversation> history = conversationRepository
                 .findByPlayerIdAndNpcIdOrderByCreatedAtAsc(player.getId(), npc.getId());
@@ -89,15 +89,32 @@ public class TalkCommand implements Command {
             history = history.subList(history.size() - MAX_HISTORY, history.size());
         }
 
-        String aiReply = npcAiService.chat(npc, player, message, history, trustLevel);
-        if (aiReply == null || aiReply.isBlank()) {
+        NpcAiService.ChatResult result = npcAiService.chat(npc, player, message, history, trustBefore);
+        String aiReply;
+        int trustDelta = 0;
+        if (result != null && !result.reply().isBlank()) {
+            aiReply    = result.reply();
+            trustDelta = result.trustDelta();
+        } else {
             aiReply = npc.getGreeting() != null ? npc.getGreeting() : "...";
         }
 
         saveMessage(player, npc, NpcConversationRole.USER,      message);
         saveMessage(player, npc, NpcConversationRole.ASSISTANT, aiReply);
 
-        return MarkupTag.NERD.wrap("Trust: " + trustLevel + "/100") + "\n" +
+        // Apply conversation-tone trust delta signalled by the LLM
+        int trustAfter = trustBefore;
+        if (trustDelta != 0) {
+            trust      = npcTrustService.adjustTrust(trust, trustDelta);
+            trustAfter = trust.getTrustLevel();
+        }
+
+        String trustLine = trustDelta != 0
+                ? "Trust: " + trustBefore + " → " + trustAfter + "/100 ("
+                  + (trustAfter > trustBefore ? "+" : "") + (trustAfter - trustBefore) + ")"
+                : "Trust: " + trustAfter + "/100";
+
+        return MarkupTag.NERD.wrap(trustLine) + "\n" +
                coloredName + " says:\n" +
                MarkupTag.NARRATE.wrap("\"" + aiReply + "\"");
     }

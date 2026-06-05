@@ -45,8 +45,8 @@ public class LookCommand implements Command {
         sb.append("=== ").append(MarkupTag.ROOM.wrap(room.getName())).append(" ===\n");
         sb.append(MarkupTag.NARRATE.wrap(room.getDescription()));
 
-        // NPCs present in the room
-        List<Npc> npcs = npcRepository.findByCurrentRoomId(room.getId());
+        // NPCs present in the room (visible only — hidden NPCs are not revealed here)
+        List<Npc> npcs = npcRepository.findByCurrentRoomIdAndVisibleTrue(room.getId());
         if (!npcs.isEmpty()) {
             sb.append("\n");
             for (Npc npc : npcs) {

@@ -381,12 +381,16 @@
                         </div>
                     </div>
                     <span id="prompt">&gt;</span>
-                    <input type="text" id="command-input" ref="commandInput"
-                           placeholder="Type a command..." autocomplete="off" spellcheck="false"
-                           v-model="commandText"
-                           @keydown="handleKey"
-                           @input="updateAc"
-                           @blur="closeAc">
+                    <div id="input-wrapper">
+                        <div id="input-highlight" ref="inputHighlight" aria-hidden="true"></div>
+                        <input type="text" id="command-input" ref="commandInput"
+                               placeholder="Type a command..." autocomplete="off" spellcheck="false"
+                               v-model="commandText"
+                               @keydown="handleKey"
+                               @input="updateAc"
+                               @scroll="syncHighlightScroll"
+                               @blur="closeAc">
+                    </div>
                     <div id="game-btns">
                         <button id="nerd-btn" :class="{ active: nerdMode }" @click="toggleNerdMode" title="Toggle nerd stats">&#9651; Nerd</button>
                         <button id="narrator-btn" :class="{ active: narratorEnabled }" @click="toggleNarrator" title="Toggle narrator">&#128266; Voice</button>

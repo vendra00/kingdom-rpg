@@ -11,6 +11,28 @@ import { STEPS, RACES, CLASSES, GENDERS, BACKGROUNDS,
 
 const { createApp } = Vue;
 
+const VERB_TYPES = {
+    look:'simple', l:'simple',
+    inventory:'simple', inv:'simple', i:'simple',
+    status:'simple', stats:'simple',
+    spells:'simple', cantrips:'simple', grimoire:'simple',
+    abilities:'simple', ability:'simple', hab:'simple',
+    help:'simple', '?':'simple',
+    north:'bare', south:'bare', east:'bare', west:'bare',
+    n:'bare', s:'bare', e:'bare', w:'bare',
+    go:'direction', move:'direction',
+    take:'target', get:'target', pick:'target',
+    drop:'target',
+    search:'target', examine:'target', inspect:'target',
+    equip:'target', wear:'target',
+    persuade:'target', charm:'target', flatter:'target',
+    talk:'talk', speak:'talk', greet:'talk',
+    roll:'dice',
+    cast:'ability', use:'ability',
+    attempt:'ability', try:'ability',
+    unequip:'slot', remove:'slot',
+};
+
 createApp({
 
     setup() {
@@ -62,7 +84,8 @@ createApp({
             playerStats: null,
 
             // ── Autocomplete ─────────────────────────────────
-            ac: { items: [], idx: -1 },
+            ac:       { items: [], idx: -1 },
+            roomNpcs: [],   // visible NPC names in current room, updated from [npc] tags
 
             // ── Music ───────────────────────────────────────
             musicMuted: false,
@@ -110,6 +133,10 @@ createApp({
         summaryClass()  { return CLASSES.find(c => c.id === this.char.characterClass); },
         summaryBg()     { return BACKGROUNDS.find(b => b.id === this.char.background); },
         summaryGender() { return GENDERS.find(g => g.id === this.char.gender); },
+    },
+
+    watch: {
+        commandText() { this.highlightInput(); },
     },
 
     methods: {
@@ -323,6 +350,15 @@ createApp({
                 pool = ABILITY_COMPLETIONS;
             } else if (verb === 'roll') {
                 pool = DICE_COMPLETIONS;
+            } else if (['talk', 'speak', 'greet', 'persuade', 'charm', 'flatter'].includes(verb)) {
+                // Match against all words typed after the verb (no trailing space — trimEnd already removed it)
+                const afterVerb = words.slice(1).join(' ').toLowerCase();
+                this.ac.items = this.roomNpcs
+                    .filter(n => n.toLowerCase().startsWith(afterVerb))
+                    .map(n => ({ value: n.toLowerCase(), hint: 'Speak with this character', npcCompletion: true }))
+                    .slice(0, 8);
+                this.ac.idx = -1;
+                return;
             } else {
                 pool = [];
             }
@@ -344,6 +380,18 @@ createApp({
             const endsWithSpace = text.endsWith(' ');
             const words         = text.trimEnd().split(/\s+/);
             const isFirst       = words.length === 1 && !endsWithSpace;
+
+            // NPC completions replace everything after the verb, then add a trailing
+            // space for talk (ready to type a message) but not for persuade
+            if (item.npcCompletion) {
+                const verb = words[0].toLowerCase();
+                const needsMsg = ['talk', 'speak', 'greet'].includes(verb);
+                this.commandText = verb + ' ' + item.value + (needsMsg ? ' ' : '');
+                this.ac.items = [];
+                this.ac.idx   = -1;
+                this.$nextTick(() => this.$refs.commandInput?.focus());
+                return;
+            }
 
             if (endsWithSpace) {
                 words.push(item.value);
@@ -480,6 +528,10 @@ createApp({
             const roomM = text.match(/===\s*\[room](.*?)\[\/room]\s*===/);
             if (roomM) this.currentRoom = roomM[1];
 
+            // Extract visible NPC names from [npc]...[/npc] tags (populated by look/go)
+            const npcTags = [...text.matchAll(/\[npc](.*?)\[\/npc]/g)];
+            if (npcTags.length > 0) this.roomNpcs = npcTags.map(m => m[1]);
+
             // Strip nerd and stats blocks from the main output text
             const mainText = text
                 .replaceAll(/\n?\[nerd][\s\S]*?\[\/nerd]\n?/g, '\n')
@@ -584,6 +636,76 @@ createApp({
         },
 
         uiClick() { Sounds.click(); },
+
+        // ── Input syntax highlight ────────────────────────────
+        highlightInput() {
+            const hl = this.$refs.inputHighlight;
+            if (!hl) return;
+
+            const raw = this.commandText;
+            if (!raw || !raw.trim()) { hl.innerHTML = ''; return; }
+
+            const DIRS = new Set(['north','south','east','west','n','s','e','w']);
+            const DICE_RE = /^\d*d\d+([+-]\d+)?$/i;
+            const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+            const tokens = raw.split(' ');
+            const verb = tokens[0].toLowerCase();
+            const type = VERB_TYPES[verb];
+            const verbCls = type !== undefined ? 'hl-verb' : 'hl-unknown';
+
+            let html = `<span class="${verbCls}">${esc(tokens[0])}</span>`;
+
+            if (tokens.length > 1) {
+                const rest = tokens.slice(1);
+                const restStr = rest.join(' ');
+
+                if (type === 'direction') {
+                    const cls = DIRS.has(rest[0]?.toLowerCase()) ? 'hl-dir' : 'hl-arg';
+                    html += ` <span class="${cls}">${esc(restStr)}</span>`;
+                } else if (type === 'dice') {
+                    const cls = DICE_RE.test(rest[0]) ? 'hl-dice' : 'hl-arg';
+                    html += ` <span class="${cls}">${esc(restStr)}</span>`;
+                } else if (type === 'ability') {
+                    html += ` <span class="hl-ability">${esc(restStr)}</span>`;
+                } else if (type === 'talk') {
+                    // Use known NPC names (from roomNpcs) to find the exact split point.
+                    // Longest-prefix match against argsStr so the full NPC name stays gold
+                    // and everything after it becomes the message (gray italic).
+                    const argsStr   = restStr;
+                    const argsLower = argsStr.toLowerCase();
+                    let   matchedLen = 0;
+                    for (const n of (this.roomNpcs || [])) {
+                        const nl = n.toLowerCase();
+                        if (argsLower.startsWith(nl) && nl.length > matchedLen)
+                            matchedLen = nl.length;
+                    }
+                    if (matchedLen > 0 && argsStr.length > matchedLen + 1) {
+                        // Confirmed NPC name + at least one space + message character
+                        html += ` <span class="hl-target">${esc(argsStr.slice(0, matchedLen))}</span>`;
+                        html += ` <span class="hl-message">${esc(argsStr.slice(matchedLen + 1))}</span>`;
+                    } else {
+                        html += ` <span class="hl-target">${esc(argsStr)}</span>`;
+                    }
+                } else if (type === 'target' || type === 'slot') {
+                    html += ` <span class="hl-target">${esc(restStr)}</span>`;
+                } else {
+                    html += ` <span class="hl-arg">${esc(restStr)}</span>`;
+                }
+            }
+
+            hl.innerHTML = `<span class="hl-inner">${html}</span>`;
+            const input = this.$refs.commandInput;
+            if (input && hl.firstElementChild)
+                hl.firstElementChild.style.transform = `translateX(-${input.scrollLeft}px)`;
+        },
+
+        syncHighlightScroll() {
+            const hl = this.$refs.inputHighlight;
+            const input = this.$refs.commandInput;
+            if (hl && input && hl.firstElementChild)
+                hl.firstElementChild.style.transform = `translateX(-${input.scrollLeft}px)`;
+        },
 
         // ── Utility ──────────────────────────────────────────
         cap(s) {

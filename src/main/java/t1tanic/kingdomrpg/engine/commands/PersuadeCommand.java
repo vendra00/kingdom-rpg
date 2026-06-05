@@ -45,7 +45,7 @@ public class PersuadeCommand implements Command {
 
         String target = String.join(" ", args).toLowerCase();
         long roomId   = player.getCurrentRoom().getId();
-        List<Npc> roomNpcs = npcRepository.findByCurrentRoomId(roomId);
+        List<Npc> roomNpcs = npcRepository.findByCurrentRoomIdAndVisibleTrue(roomId);
 
         Npc npc = roomNpcs.stream()
                 .filter(n -> n.getName().toLowerCase().contains(target))

@@ -726,18 +726,55 @@ body {
     user-select: none;
 }
 
+#input-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+#input-highlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    font-family: inherit;
+    font-size: 1rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    z-index: 0;
+    user-select: none;
+}
+
+.hl-inner { white-space: pre; }
+
 #command-input {
     flex: 1;
+    min-width: 0;
     background: transparent;
     border: none;
-    color: var(--green);
+    color: transparent;
     font-family: inherit;
     font-size: 1rem;
     outline: none;
     caret-color: var(--green);
+    padding: 0;
+    position: relative;
+    z-index: 1;
 }
 
 #command-input::placeholder { color: var(--gray); }
+
+/* ── Input syntax highlighting ── */
+.hl-verb    { color: #00e5ff; font-weight: bold; }
+.hl-unknown { color: #ff6b6b; font-weight: bold; }
+.hl-dir     { color: #98fb98; }
+.hl-target  { color: #ffd700; }
+.hl-dice    { color: #ffa726; font-weight: bold; }
+.hl-ability { color: #c77dff; }
+.hl-message { color: #888888; font-style: italic; }
+.hl-arg     { color: #cccccc; }
 
 /* ── Autocomplete ── */
 #ac-list {

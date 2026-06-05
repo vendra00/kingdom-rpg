@@ -12,6 +12,8 @@ import t1tanic.kingdomrpg.domain.character.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Drives NPC dialogue by calling the Anthropic Messages API with the NPC's personality system prompt
@@ -25,8 +27,12 @@ import java.util.List;
 @Service
 public class NpcAiService {
 
-    private static final String ANTHROPIC_URL = "https://api.anthropic.com";
-    private static final String ANTHROPIC_VERSION = "2023-06-01";
+    private static final String  ANTHROPIC_URL     = "https://api.anthropic.com";
+    private static final String  ANTHROPIC_VERSION = "2023-06-01";
+    private static final Pattern TRUST_PATTERN     = Pattern.compile("\\[TRUST:(-?\\d+)]", Pattern.CASE_INSENSITIVE);
+
+    /** Carries the NPC's dialogue and any trust adjustment the LLM signalled. */
+    public record ChatResult(String reply, int trustDelta) {}
 
     private final RestClient restClient;
     private final String     apiKey;
@@ -53,7 +59,7 @@ public class NpcAiService {
      * @param trustLevel  current trust level (0–100) used to control what the NPC will share
      * @return the NPC's reply text, or {@code null} if the API key is absent or the call fails
      */
-    public String chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel) {
+    public ChatResult chat(Npc npc, Player player, String userMessage, List<NpcConversation> history, int trustLevel) {
         if (apiKey == null || apiKey.isBlank()) {
             log.warn("Anthropic API key not configured — NPC AI unavailable");
             return null;
@@ -77,7 +83,17 @@ public class NpcAiService {
                     .retrieve()
                     .body(ApiResponse.class);
 
-            return response != null ? response.getText() : null;
+            if (response == null) return null;
+
+            String raw = response.getText();
+            int trustDelta = 0;
+            Matcher m = TRUST_PATTERN.matcher(raw);
+            if (m.find()) {
+                try { trustDelta = Math.max(-15, Math.min(10, Integer.parseInt(m.group(1)))); }
+                catch (NumberFormatException ignored) {}
+            }
+            String reply = TRUST_PATTERN.matcher(raw).replaceAll("").strip();
+            return new ChatResult(reply, trustDelta);
 
         } catch (Exception e) {
             log.error("Anthropic API call failed: {}", e.getMessage());
@@ -113,6 +129,11 @@ public class NpcAiService {
                 - React naturally to tone: if the player is rude or threatening, become cold or hostile.
                 - If the player repeats the same phrase or question, show mild irritation — vary your response.
                 - The player's name is %s. You are currently in %s.
+                - After your in-character dialogue, on a NEW LINE, write exactly one trust marker: [TRUST:N]
+                  where N is an integer chosen from the player's latest message tone ONLY (not cumulative):
+                  direct threats or demands → -10 to -15 | insults or rudeness → -3 to -8 | neutral → 0
+                  polite or curious → +2 to +5 | genuine warmth or meaningful sharing → +5 to +8
+                  This marker is a game-engine instruction — do NOT include it inside quotes or spoken text.
                 """.formatted(
                 npc.getName(),
                 backstory,
