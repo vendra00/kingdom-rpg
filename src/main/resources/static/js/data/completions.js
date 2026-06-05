@@ -19,6 +19,8 @@ export const COMMAND_COMPLETIONS = [
     { value: 'search',     hint: 'Search the room or a specific container' },
     { value: 'equip',      hint: 'Equip an item from your inventory' },
     { value: 'unequip',    hint: 'Remove an item from an equipped slot' },
+    { value: 'talk',       hint: 'Talk to an NPC  (talk <name> <message>)' },
+    { value: 'persuade',   hint: 'Persuade an NPC to trust you more  (d20 + CHA vs DC)' },
     { value: 'help',       hint: 'Show all available commands' },
 ];
 

@@ -511,7 +511,7 @@ createApp({
             return esc
                 .replaceAll(/\[nerd][\s\S]*?\[\/nerd]/g,      '')
                 .replaceAll(/\[stats][^[]*\[\/stats]/g,       '')
-                .replaceAll(/[[]narrate](.*?)[[]\/narrate]/g,     '$1')
+                .replaceAll(/[[]narrate]([\s\S]*?)[[]\/narrate]/g, '$1')
                 .replaceAll(/[[]room](.*?)[[]\/room]/g,           '<span class="tag-room">$1</span>')
                 .replaceAll(/[[]exit](.*?)[[]\/exit]/g,           '<span class="tag-exit">$1</span>')
                 .replaceAll(/[[]item](.*?)[[]\/item]/g,           (_, name) =>
@@ -522,6 +522,8 @@ createApp({
                     `<span class="tag-item cmd-link" data-cmd="unequip ${name.toLowerCase()}" title="unequip ${name.toLowerCase()}">${name}</span>`)
                 .replaceAll(/[[]container](.*?)[[]\/container]/g, (_, name) =>
                     `<span class="tag-container cmd-link" data-cmd="search ${name.toLowerCase()}" title="search ${name.toLowerCase()}">${name}</span>`)
+                .replaceAll(/[[]npc](.*?)[[]\/npc]/g, (_, name) =>
+                    `<span class="tag-npc cmd-link" data-cmd="talk ${name.toLowerCase()}" title="talk ${name.toLowerCase()}">${name}</span>`)
                 .replaceAll(/[[]c=([^\]]+)](.*?)[[]\/c]/g,        '<span style="color:$1">$2</span>');
         },
 

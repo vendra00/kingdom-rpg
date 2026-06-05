@@ -803,6 +803,7 @@ body {
 .tag-exit      { color: #00cfff; }
 .tag-item      { color: #ffd700; font-weight: bold; }
 .tag-container { color: #00cfff; font-style: italic; }
+.tag-npc       { font-weight: bold; font-style: italic; }
 
 /* ── Clickable command links ── */
 .cmd-link {

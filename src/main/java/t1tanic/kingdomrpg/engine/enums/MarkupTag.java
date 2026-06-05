@@ -44,7 +44,12 @@ public enum MarkupTag {
      * Used for items currently occupying an equipment slot.
      * Rendered as a clickable element prefilling "unequip &lt;name&gt;" in the command input.
      */
-    EQUIPPED("equipped");
+    EQUIPPED("equipped"),
+    /**
+     * Used for NPC names visible in a room description.
+     * Rendered as a clickable element prefilling "talk &lt;name&gt;" in the command input.
+     */
+    NPC("npc");
 
     private final String tag;
 
