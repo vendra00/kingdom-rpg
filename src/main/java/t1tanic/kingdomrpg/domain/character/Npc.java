@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import t1tanic.kingdomrpg.domain.character.enums.Ability;
 import t1tanic.kingdomrpg.domain.character.enums.NpcFaction;
+
+import java.util.Optional;
 
 /**
  * Represents a non-player character (NPC) within the RPG world.
@@ -82,4 +85,21 @@ public class Npc extends BaseCharacter {
      * shown in room descriptions and cannot be talked to or persuaded until revealed.
      */
     private boolean visible = true;
+
+    /**
+     * Per-ability persuasion outcome flavor text.
+     * Each field is optional — only outcomes explicitly authored appear in gameplay.
+     */
+    @Embedded
+    private NpcAbilityOutcomes abilityOutcomes = new NpcAbilityOutcomes();
+
+    /**
+     * Retrieves the authored outcome string for the given ability result, delegating to
+     * {@link NpcAbilityOutcomes#forAbility(Ability, boolean)}.
+     */
+    public Optional<String> abilityOutcome(Ability ability, boolean success) {
+        return abilityOutcomes == null
+                ? Optional.empty()
+                : abilityOutcomes.forAbility(ability, success);
+    }
 }

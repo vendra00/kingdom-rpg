@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import t1tanic.kingdomrpg.domain.character.CharacterAttributes;
 import t1tanic.kingdomrpg.domain.character.Npc;
+import t1tanic.kingdomrpg.domain.character.NpcAbilityOutcomes;
 import t1tanic.kingdomrpg.domain.character.enums.NpcFaction;
 import t1tanic.kingdomrpg.domain.world.Room;
 import t1tanic.kingdomrpg.repository.NpcRepository;
@@ -37,7 +38,16 @@ public class NpcInitializer {
                 "like a bell struck underwater. The old kings sealed a chamber below the west tower. " +
                 "I believe that is where the answers lie, and why I have never dared to look.",
                 NpcFaction.FRIENDLY, rooms.get("library"),
-                3, 50, 65, 13),
+                3, 50, 65, 13,
+                NpcAbilityOutcomes.builder()
+                    .convinceSuccess("He adjusts his spectacles slowly. 'I... suppose you make a fair point. Very well.'")
+                    .convinceFailure("He shakes his head. 'An interesting argument. Unconvincing, but interesting.'")
+                    .deceiveSuccess("He nods, satisfied with the explanation — for now.")
+                    .deceiveFailure("He peers at you over his spectacles. 'I have spent forty years cataloguing castle intrigues. Try a different approach.'")
+                    .bribeFailure("He waves the coin away without looking up. 'I have everything I need in these stacks.'")
+                    .senseSuccess("You catch the shadow behind his words — he knows far more about the vanishing than he lets on.")
+                    .senseFailure("He keeps his scholarly composure perfectly. Whatever he feels stays buried under decades of practice.")
+                    .build()),
 
             npc("Scarred Guard",
                 "A weathered soldier in tattered armor. He eyes you with suspicion.",
@@ -50,7 +60,21 @@ public class NpcInitializer {
                 "The ambush was not random. Someone inside the castle left the east passage unlatched that night. " +
                 "I never found out who, but the only person still here who was here then is that old scholar in the library.",
                 NpcFaction.NEUTRAL, rooms.get("hallway"),
-                2, 25, 75, 18),
+                2, 25, 75, 18,
+                NpcAbilityOutcomes.builder()
+                    .bribeSuccess("His eyes linger on the coin. He takes it without a word and steps back half a pace.")
+                    .bribeFailure("He shoves your hand aside. 'Keep your gold. I'm not for sale.'")
+                    .intimidateSuccess("Something in his expression shifts — a flicker of old fear before his jaw sets. He doesn't respond.")
+                    .intimidateFailure("He faces you without flinching. 'Done worse than you, stranger.'")
+                    .convinceSuccess("He says nothing, but the weight on his sword hand eases slightly.")
+                    .convinceFailure("He watches you for a long beat. 'Fine speech. Doesn't change anything.'")
+                    .deceiveSuccess("He believes it. His grip on the hilt loosens just a fraction.")
+                    .deceiveFailure("His eyes narrow. 'You're lying.' It wasn't a question.")
+                    .negotiateSuccess("He looks away, weighing it. 'Fine. Once. And we're square.'")
+                    .negotiateFailure("He scoffs. 'Nothing you're offering is worth my trouble.'")
+                    .senseSuccess("Beneath the hard edge you catch something — exhaustion. He doesn't want to be here at all.")
+                    .senseFailure("He keeps his face a wall. Whatever he's hiding, it stays hidden.")
+                    .build()),
 
             npc("Hollow Knight",
                 "A suit of animated armor. Its empty visor tracks your every move.",
@@ -62,7 +86,8 @@ public class NpcInitializer {
                 null,
                 null,
                 NpcFaction.HOSTILE, rooms.get("armory"),
-                5, 0, 100, 30)
+                5, 0, 100, 30,
+                null)
         );
         npcRepository.saveAll(npcs);
         log.info("Seeded {} NPCs", npcs.size());
@@ -70,7 +95,8 @@ public class NpcInitializer {
 
     private Npc npc(String name, String description, String personality, String greeting, String secret,
                     NpcFaction faction, Room room, int level,
-                    int baseTrust, int secretThreshold, int persuadeDc) {
+                    int baseTrust, int secretThreshold, int persuadeDc,
+                    NpcAbilityOutcomes outcomes) {
         Npc n = new Npc();
         n.setName(name);
         n.setDescription(description);
@@ -83,6 +109,7 @@ public class NpcInitializer {
         n.setBaseTrust(baseTrust);
         n.setSecretThreshold(secretThreshold);
         n.setPersuadeDc(persuadeDc);
+        if (outcomes != null) n.setAbilityOutcomes(outcomes);
 
         CharacterAttributes attrs = new CharacterAttributes(10, 10, 10, 10, 10, 10);
         n.setAttributes(attrs);

@@ -157,6 +157,9 @@ public class TalkCommand implements Command {
                            : "FAILURE";
             sb.append(MarkupTag.NERD.wrap(ability.displayName() + ": " + checkResult.rollLine())).append("\n");
             sb.append(verdict).append("  ").append(checkResult.narrative()).append("\n");
+            // NPC-specific authored outcome narrative (game-master flavor layer)
+            npc.abilityOutcome(ability, checkResult.success())
+               .ifPresent(outcome -> sb.append(MarkupTag.NARRATE.wrap(outcome)).append("\n"));
         }
 
         sb.append(MarkupTag.NERD.wrap(trustLine)).append("\n");
