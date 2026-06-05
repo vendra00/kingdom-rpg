@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import t1tanic.kingdomrpg.config.GameProperties;
 import t1tanic.kingdomrpg.domain.character.Player;
 import t1tanic.kingdomrpg.domain.character.enums.Ability;
+import t1tanic.kingdomrpg.domain.character.enums.Attribute;
 import t1tanic.kingdomrpg.engine.dice.Dice;
 import t1tanic.kingdomrpg.engine.dice.DiceRoll;
 import t1tanic.kingdomrpg.engine.enums.MarkupTag;
